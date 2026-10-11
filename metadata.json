@@ -1,0 +1,9 @@
+{
+  "uuid": "macdock@shfqh",
+  "name": "MacDock",
+  "description": "A macOS-style application dock with hover magnification, launch bounce, running indicators and intellihide.",
+  "shell-version": ["46", "47", "48", "49"],
+  "settings-schema": "org.gnome.shell.extensions.macdock",
+  "version-name": "0.1.0",
+  "url": ""
+}

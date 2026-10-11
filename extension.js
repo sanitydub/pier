@@ -1,0 +1,14 @@
+import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
+
+import {DockManager} from './src/dockManager.js';
+
+export default class MacDockExtension extends Extension {
+    enable() {
+        this._manager = new DockManager(this);
+    }
+
+    disable() {
+        this._manager?.destroy();
+        this._manager = null;
+    }
+}

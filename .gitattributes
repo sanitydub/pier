@@ -1,0 +1,2 @@
+# Edited on Windows, run on Linux: keep LF so the Makefile and scripts work.
+* text=auto eol=lf

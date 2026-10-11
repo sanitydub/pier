@@ -1,0 +1,43 @@
+/* Background colour and corner radius are set inline from settings (see Dock.syncStyle). */
+.macdock-background {
+    background-color: rgba(28, 28, 30, 0.55);
+    border-radius: 17px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+}
+
+.macdock-box {
+    spacing: 0;
+}
+
+.macdock-item,
+.macdock-item:hover,
+.macdock-item:active {
+    padding: 0;
+    border: none;
+    background: none;
+    box-shadow: none;
+}
+
+.macdock-dot {
+    border-radius: 99px;
+    background-color: rgba(255, 255, 255, 0.85);
+}
+
+.macdock-separator-line {
+    background-color: rgba(255, 255, 255, 0.28);
+}
+
+.macdock-show-apps-icon {
+    color: rgba(255, 255, 255, 0.92);
+}
+
+.macdock-tooltip {
+    background-color: rgba(40, 40, 42, 0.92);
+    color: #f2f2f2;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 7px;
+    padding: 3px 10px;
+    font-size: 10pt;
+    font-weight: 500;
+}

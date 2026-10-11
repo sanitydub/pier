@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="org.gnome.shell.extensions.macdock" path="/org/gnome/shell/extensions/macdock/">
+
+    <!-- Appearance -->
+    <key name="icon-size" type="i">
+      <range min="24" max="128"/>
+      <default>48</default>
+      <summary>Icon size</summary>
+      <description>Size of dock icons in logical pixels when not magnified.</description>
+    </key>
+    <key name="position" type="s">
+      <choices>
+        <choice value="bottom"/>
+        <choice value="left"/>
+        <choice value="right"/>
+      </choices>
+      <default>'bottom'</default>
+      <summary>Screen edge the dock is attached to</summary>
+    </key>
+    <key name="bg-opacity" type="d">
+      <range min="0.0" max="1.0"/>
+      <default>0.55</default>
+      <summary>Background opacity</summary>
+    </key>
+    <key name="blur-background" type="b">
+      <default>false</default>
+      <summary>Blur what is behind the dock</summary>
+      <description>Frosted-glass effect. Blur is rectangular and does not follow the rounded corners.</description>
+    </key>
+    <key name="show-running-dots" type="b">
+      <default>true</default>
+      <summary>Show a dot under running applications</summary>
+    </key>
+    <key name="show-apps-button" type="b">
+      <default>true</default>
+      <summary>Show the "Show Applications" button</summary>
+    </key>
+
+    <!-- Magnification -->
+    <key name="magnification-enabled" type="b">
+      <default>true</default>
+      <summary>Magnify icons under the pointer</summary>
+    </key>
+    <key name="magnification-size" type="i">
+      <range min="24" max="192"/>
+      <default>88</default>
+      <summary>Maximum magnified icon size</summary>
+    </key>
+    <key name="magnification-range" type="i">
+      <range min="1" max="6"/>
+      <default>3</default>
+      <summary>How many neighbouring icons are affected by magnification</summary>
+    </key>
+
+    <!-- Behaviour -->
+    <key name="autohide-mode" type="s">
+      <choices>
+        <choice value="off"/>
+        <choice value="always"/>
+        <choice value="intellihide"/>
+      </choices>
+      <default>'intellihide'</default>
+      <summary>Autohide mode</summary>
+      <description>off: always visible. always: hidden until the pointer pushes against the screen edge. intellihide: hidden only while a window overlaps it.</description>
+    </key>
+    <key name="animate-launch" type="b">
+      <default>true</default>
+      <summary>Bounce icons while applications launch</summary>
+    </key>
+
+  </schema>
+</schemalist>
