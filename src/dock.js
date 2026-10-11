@@ -39,7 +39,9 @@ function computeMetrics(settings) {
         base,
         max: maxLogical * sf,
         itemPad, // along-axis padding on each side of an icon
-        topPad: Math.round(6 * sf), // cross padding between icon and the dock's far side
+        // topPad, edgePad and bgPad + itemPad are equal so the gap between the
+        // icons and the background's edge is the same on every side.
+        topPad: Math.round(10 * sf), // cross padding between icon and the dock's far side
         edgePad: Math.round(10 * sf), // cross padding towards the screen edge, holds the dot
         bgPad: Math.round(6 * sf), // background overhang past the first/last item
         gap: Math.round(6 * sf), // floating gap between background and screen edge

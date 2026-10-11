@@ -148,6 +148,10 @@ class DockIcon extends St.Button {
         const width = vertical ? cross : along;
         const height = vertical ? along : cross;
         this.set_size(width, height);
+        // The content's natural size is its children's extent, which is
+        // smaller than the item; the button would centre it and shift the
+        // icon off its slot. Make it fill the item instead.
+        this._content.set_size(width, height);
 
         // Place the unscaled (max-size) icon so that after scaling around its
         // pivot it occupies exactly the icon slot of this item.
