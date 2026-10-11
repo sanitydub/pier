@@ -103,12 +103,23 @@ export class DockManager {
         // Zero height so the overview doesn't reserve space for it.
         dash.set_height(0);
         Main.overview.connectObject('showing', () => dash.hide(), this);
+
+        // A hidden dash never styles its icons, so its _adjustIconSize() throws
+        // on a null icon once the overview has set its size, aborting the rest
+        // of every redisplay. Skip it while hidden (an own property shadowing
+        // the class method); _restoreStockDash() removes it again.
+        if (typeof dash._adjustIconSize === 'function')
+            dash._adjustIconSize = () => {};
     }
 
     _restoreStockDash() {
         Main.overview.disconnectObject(this);
         const dash = Main.overview.dash;
+        if (Object.hasOwn(dash, '_adjustIconSize'))
+            delete dash._adjustIconSize;
         dash.set_height(-1);
         dash.show();
+        // Catch up on redisplays that ran while hidden; runs once the dash is mapped.
+        dash._queueRedisplay?.();
     }
 }
