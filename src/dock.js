@@ -10,10 +10,11 @@ import * as DND from 'resource:///org/gnome/shell/ui/dnd.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
-import {AppDockItem, DockSeparator, ShowAppsItem} from './dockItem.js';
+import {AppDockItem, DockPlaceholder, DockSeparator, ShowAppsItem} from './dockItem.js';
 import * as Geo from './util/geometry.js';
 
 const REVEAL_DURATION = 220;
+const SLIDE_DURATION = 180;
 const TOOLTIP_GAP = 6;
 
 // GNOME 50 dropped X11 and with it the 'affectsInputRegion' chrome parameter,
@@ -95,6 +96,7 @@ export const Dock = GObject.registerClass({
         this._blur = null;
         this._tooltipItem = null;
         this._tooltipLater = 0;
+        this._plannedAlong = null; // item -> along position after a pending relayout
 
         this._background = new St.Widget({style_class: 'macdock-background'});
         this.add_child(this._background);
@@ -150,14 +152,44 @@ export const Dock = GObject.registerClass({
         return this._items.get(`pin:${id}`) ?? this._items.get(`app:${id}`) ?? null;
     }
 
+    /** Index in items where pinned apps start (where the first one is, or would be). */
+    get pinnedStartIndex() {
+        const items = this.items;
+        const first = items.findIndex(item => item.pinned);
+        if (first >= 0)
+            return first;
+        return items[0] instanceof ShowAppsItem ? 1 : 0;
+    }
+
     /** Move an item to @index in the dock without changing the app model. */
     moveItem(item, index) {
-        this._box.set_child_at_index(item, index);
+        this._slide(() => this._box.set_child_at_index(item, index));
     }
 
     /** Put items back in model order, undoing any moveItem(). */
     restoreOrder() {
-        this._syncItems();
+        this._slide(() => this._syncItems());
+    }
+
+    /** Open an empty, growing gap at @index, e.g. for an app being dragged in. */
+    insertPlaceholder(index) {
+        const placeholder = new DockPlaceholder(this);
+        this._box.insert_child_at_index(placeholder, index);
+        this._updateGeometry();
+        placeholder.animateAlong(placeholder.baseAlong);
+        return placeholder;
+    }
+
+    /** Close @placeholder's gap (animated unless @animate is false) and remove it. */
+    removePlaceholder(placeholder, animate = true) {
+        const remove = () => {
+            placeholder.destroy();
+            this._updateGeometry();
+        };
+        if (animate)
+            placeholder.animateAlong(0, remove);
+        else
+            remove();
     }
 
     // DND drop-target delegate; forwarded to the feature that handles drags.
@@ -292,12 +324,20 @@ export const Dock = GObject.registerClass({
             }
         }
 
+        // Placeholders (gaps for apps being dragged in) aren't part of the
+        // model; keep them where they are among the items.
+        const placeholders = this.items
+            .filter(item => item instanceof DockPlaceholder)
+            .map(item => [item, this.items.indexOf(item)]);
+
         wanted.forEach((item, i) => {
             if (item.get_parent() === this._box)
                 this._box.set_child_at_index(item, i);
             else
                 this._box.insert_child_at_index(item, i);
         });
+        for (const [placeholder, index] of placeholders)
+            this._box.set_child_at_index(placeholder, index);
 
         this._updateGeometry();
     }
@@ -360,8 +400,52 @@ export const Dock = GObject.registerClass({
         }
     }
 
+    /**
+     * Run @reorder, which changes the order of items, then slide every item
+     * that moved from where it was drawn to its new place.
+     */
+    _slide(reorder) {
+        const vertical = Geo.isVertical(this.edge);
+        const prop = vertical ? 'translation_y' : 'translation_x';
+        const allocStart = actor => vertical ? actor.allocation.y1 : actor.allocation.x1;
+        const size = actor => vertical
+            ? actor.get_preferred_height(-1)[1]
+            : actor.get_preferred_width(-1)[1];
+
+        // Where each item is drawn now. Allocations are stale if an earlier
+        // reorder hasn't been laid out yet, so prefer what that one planned.
+        const before = new Map();
+        for (const item of this.items) {
+            const laidOut = this._plannedAlong?.get(item) ?? allocStart(this._box) + allocStart(item);
+            before.set(item, laidOut + item[prop]);
+        }
+
+        reorder();
+
+        // Where each item will be laid out: the box is centred in the dock.
+        const items = this.items;
+        const total = items.reduce((sum, item) => sum + size(item), 0);
+        let pos = Math.round(((vertical ? this.height : this.width) - total) / 2);
+        this._plannedAlong = new Map();
+        for (const item of items) {
+            this._plannedAlong.set(item, pos);
+            const from = before.get(item);
+            if (from !== undefined && Math.abs(from - pos) >= 1) {
+                item.remove_transition(prop.replace('_', '-'));
+                item[prop] = from - pos;
+                item.ease({
+                    [prop]: 0,
+                    duration: SLIDE_DURATION,
+                    mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+                });
+            }
+            pos += size(item);
+        }
+    }
+
     vfunc_allocate(box) {
         this.set_allocation(box);
+        this._plannedAlong = null;
 
         const m = this.metrics;
         const width = box.get_width();

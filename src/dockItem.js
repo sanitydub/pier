@@ -18,6 +18,9 @@ const ICON_PIVOTS = {
     [Geo.Position.RIGHT]: [1, 0.5],
 };
 
+const FADE_IN_DURATION = 180;
+const PLACEHOLDER_DURATION = 180;
+
 const MENU_SIDES = {
     [Geo.Position.BOTTOM]: St.Side.BOTTOM,
     [Geo.Position.LEFT]: St.Side.LEFT,
@@ -122,7 +125,14 @@ class DockIcon extends St.Button {
 
     /** Hide the icon and dot but keep the item's space, e.g. while it is being dragged. */
     setSlotEmpty(empty) {
+        this._content.remove_transition('opacity');
         this._content.opacity = empty ? 0 : 255;
+    }
+
+    /** Show the icon and dot by fading them in. */
+    fadeIn() {
+        this._content.opacity = 0;
+        this._content.ease({opacity: 255, duration: FADE_IN_DURATION});
     }
 
     setIconScale(scale) {
@@ -370,5 +380,72 @@ class DockSeparator extends St.Widget {
     }
 
     syncDot() {
+    }
+});
+
+/**
+ * An empty gap among the pinned apps, used while an app is dragged in from
+ * elsewhere. It grows and shrinks along the dock axis so neighbours make room
+ * smoothly.
+ */
+export const DockPlaceholder = GObject.registerClass(
+class DockPlaceholder extends St.Widget {
+    constructor(dock) {
+        super();
+
+        const m = dock.metrics;
+        this.pinned = true;
+        this._vertical = Geo.isVertical(dock.edge);
+        this._full = m.base + 2 * m.itemPad;
+        this._cross = m.topPad + m.base + m.edgePad;
+        this._along = 0;
+        this._timeline = null;
+        this._setAlong(0);
+
+        this.connect('destroy', () => this._timeline?.stop());
+    }
+
+    get magnifiable() {
+        return false;
+    }
+
+    get baseAlong() {
+        return this._full;
+    }
+
+    get tooltipText() {
+        return '';
+    }
+
+    syncDot() {
+    }
+
+    _setAlong(along) {
+        this._along = along;
+        if (this._vertical)
+            this.set_size(this._cross, along);
+        else
+            this.set_size(along, this._cross);
+    }
+
+    /** Animate the gap's size along the dock to @target, then call @onComplete. */
+    animateAlong(target, onComplete = null) {
+        this._timeline?.stop();
+        const from = this._along;
+        const timeline = new Clutter.Timeline({
+            actor: this,
+            duration: PLACEHOLDER_DURATION,
+            progress_mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+        });
+        timeline.connect('new-frame', () => {
+            this._setAlong(Math.round(from + (target - from) * timeline.get_progress()));
+        });
+        timeline.connect('completed', () => {
+            this._timeline = null;
+            this._setAlong(target);
+            onComplete?.();
+        });
+        this._timeline = timeline;
+        timeline.start();
     }
 });
