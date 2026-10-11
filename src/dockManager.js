@@ -25,6 +25,7 @@ const REBUILD_KEYS = new Set([
  */
 export class DockManager {
     constructor(extension) {
+        this._extension = extension;
         this._settings = extension.getSettings();
         this._model = new AppModel();
         this._dock = null;
@@ -54,6 +55,7 @@ export class DockManager {
         this._model.destroy();
         this._restoreStockDash();
         this._settings = null;
+        this._extension = null;
     }
 
     _build() {
@@ -61,7 +63,8 @@ export class DockManager {
         if (!monitor)
             return;
 
-        this._dock = new Dock(this._settings, this._model, monitor, Main.layoutManager.primaryIndex);
+        this._dock = new Dock(this._settings, this._model, monitor, Main.layoutManager.primaryIndex,
+            () => this._extension.openPreferences());
         this._features = FEATURES.map(Feature => new Feature(this._dock, this._settings));
         for (const feature of this._features)
             feature.enable();

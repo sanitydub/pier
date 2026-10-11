@@ -55,6 +55,7 @@ class DockIcon extends St.Button {
         this._metrics = dock.metrics;
         this._position = dock.edge;
         this._iconPx = 0;
+        this._menu = null;
 
         this._content = new St.Widget();
         this.set_child(this._content);
@@ -73,8 +74,29 @@ class DockIcon extends St.Button {
         this.connect('notify::pressed', () => {
             this.icon.opacity = this.pressed ? 170 : 255;
         });
+        this.connect('destroy', () => {
+            this._menu?.destroy();
+            this._menu = null;
+        });
 
         this.setIconScale(1);
+    }
+
+    /** This icon's popup menu, created on first use. */
+    _getMenu() {
+        if (!this._menu) {
+            this._menu = new PopupMenu.PopupMenu(this, 0.5, MENU_SIDES[this._position]);
+            this._menu.actor.add_style_class_name('macdock-menu');
+            this._menu.connect('open-state-changed', (menu, open) => {
+                this._dock.setMenuOpen(open);
+                if (!open)
+                    this.sync_hover();
+            });
+            Main.uiGroup.add_child(this._menu.actor);
+            this._menu.actor.hide();
+            this._dock.menuManager.addMenu(this._menu);
+        }
+        return this._menu;
     }
 
     get magnifiable() {
@@ -143,14 +165,9 @@ class AppDockItem extends DockIcon {
         super(dock, size => app.create_icon_texture(size));
 
         this.app = app;
-        this._menu = null;
 
         this.app.connectObject('notify::state', () => this.syncDot(), this);
         this.connect('clicked', (actor, button) => this._onClicked(button));
-        this.connect('destroy', () => {
-            this._menu?.destroy();
-            this._menu = null;
-        });
 
         this.syncDot();
     }
@@ -212,20 +229,7 @@ class AppDockItem extends DockIcon {
     }
 
     _openMenu() {
-        if (!this._menu) {
-            this._menu = new PopupMenu.PopupMenu(this, 0.5, MENU_SIDES[this._position]);
-            this._menu.actor.add_style_class_name('macdock-menu');
-            this._menu.connect('open-state-changed', (menu, open) => {
-                this._dock.setMenuOpen(open);
-                if (!open)
-                    this.sync_hover();
-            });
-            Main.uiGroup.add_child(this._menu.actor);
-            this._menu.actor.hide();
-            this._dock.menuManager.addMenu(this._menu);
-        }
-
-        const menu = this._menu;
+        const menu = this._getMenu();
         menu.removeAll();
 
         const windows = this._windows();
@@ -264,6 +268,10 @@ class ShowAppsItem extends DockIcon {
         }));
 
         this.connect('clicked', (actor, button) => {
+            if (button === Clutter.BUTTON_SECONDARY) {
+                this._openMenu();
+                return;
+            }
             if (button !== Clutter.BUTTON_PRIMARY)
                 return;
             this._dock.hideTooltip();
@@ -276,6 +284,14 @@ class ShowAppsItem extends DockIcon {
 
     get tooltipText() {
         return _('Show Applications');
+    }
+
+    _openMenu() {
+        this._dock.hideTooltip();
+        const menu = this._getMenu();
+        if (menu.isEmpty())
+            menu.addAction(_('Dock Settings…'), () => this._dock.openSettings());
+        menu.open(BoxPointer.PopupAnimation.FULL);
     }
 });
 

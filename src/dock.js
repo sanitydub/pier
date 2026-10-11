@@ -67,10 +67,11 @@ export const Dock = GObject.registerClass({
         'item-launching': {param_types: [GObject.TYPE_OBJECT]},
     },
 }, class Dock extends St.Widget {
-    constructor(settings, model, monitor, monitorIndex) {
+    constructor(settings, model, monitor, monitorIndex, openSettings) {
         super({name: 'macdock', reactive: true, track_hover: true});
 
         this._settings = settings;
+        this.openSettings = openSettings;
         this.model = model;
         this.monitor = monitor;
         this.monitorIndex = monitorIndex;
