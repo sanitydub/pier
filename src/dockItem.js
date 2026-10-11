@@ -161,15 +161,15 @@ class DockIcon extends St.Button {
         switch (this._position) {
         case Geo.Position.LEFT:
             [ix, iy] = [m.edgePad, alongOffset];
-            [dx, dy] = [(m.edgePad - m.dot) / 2, (height - m.dot) / 2];
+            [dx, dy] = [m.edgePad - m.dotGap - m.dot, (height - m.dot) / 2];
             break;
         case Geo.Position.RIGHT:
             [ix, iy] = [width - m.edgePad - T, alongOffset];
-            [dx, dy] = [width - (m.edgePad + m.dot) / 2, (height - m.dot) / 2];
+            [dx, dy] = [width - m.edgePad + m.dotGap, (height - m.dot) / 2];
             break;
         default:
             [ix, iy] = [alongOffset, height - m.edgePad - T];
-            [dx, dy] = [(width - m.dot) / 2, height - (m.edgePad + m.dot) / 2];
+            [dx, dy] = [(width - m.dot) / 2, height - m.edgePad + m.dotGap];
         }
 
         const k = iconPx / T;

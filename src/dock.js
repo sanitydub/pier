@@ -45,7 +45,11 @@ function computeMetrics(settings) {
         edgePad: Math.round(10 * sf), // cross padding towards the screen edge, holds the dot
         bgPad: Math.round(6 * sf), // background overhang past the first/last item
         gap: Math.round(6 * sf), // floating gap between background and screen edge
-        dot: Math.round(5 * sf),
+        dot: Math.round(4 * sf),
+        // The running dot sits just below the icon's slot rather than centred
+        // in edgePad, so it stays clear of the background's border. App icons
+        // have transparent margins, so it still looks spaced from the artwork.
+        dotGap: Math.max(1, Math.round(1 * sf)),
         sepAlong: Math.round(13 * sf),
         rangePx: settings.get_int('magnification-range') * (base + 2 * itemPad),
     };
