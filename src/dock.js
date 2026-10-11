@@ -104,6 +104,11 @@ export const Dock = GObject.registerClass({
         this._tooltip = new St.Label({style_class: 'macdock-tooltip', visible: false});
         Main.layoutManager.addTopChrome(this._tooltip, {...NO_INPUT_REGION});
 
+        // On shell shutdown the layout manager destroys these before the dock,
+        // so drop our references rather than touching disposed actors later.
+        this._strut.connect('destroy', () => (this._strut = null));
+        this._tooltip.connect('destroy', () => (this._tooltip = null));
+
         this.connect('notify::hover', () => {
             if (!this.hover)
                 this.hideTooltip();
@@ -184,7 +189,8 @@ export const Dock = GObject.registerClass({
     }
 
     setStrutsEnabled(enabled) {
-        this._strut.visible = enabled;
+        if (this._strut)
+            this._strut.visible = enabled;
     }
 
     setMenuOpen(open) {
@@ -209,7 +215,7 @@ export const Dock = GObject.registerClass({
 
     hideTooltip() {
         this._tooltipItem = null;
-        this._tooltip.hide();
+        this._tooltip?.hide();
     }
 
     // ---- Items ----
@@ -411,8 +417,8 @@ export const Dock = GObject.registerClass({
             global.compositor.get_laters().remove(this._tooltipLater);
             this._tooltipLater = 0;
         }
-        this._tooltip.destroy();
-        this._strut.destroy();
+        this._tooltip?.destroy();
+        this._strut?.destroy();
         this._items.clear();
     }
 });
