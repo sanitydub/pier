@@ -26,8 +26,8 @@ make nested         # start a nested GNOME Shell in a window (no logout needed)
 Inside the nested shell's terminal (or from another terminal with the same session):
 
 ```bash
-gnome-extensions enable macdock@shfqh
-gnome-extensions prefs macdock@shfqh
+gnome-extensions enable macdock@sanitydub.github.io
+gnome-extensions prefs macdock@sanitydub.github.io
 ```
 
 - Logs: `make logs` (or `journalctl -f -o cat /usr/bin/gnome-shell`)

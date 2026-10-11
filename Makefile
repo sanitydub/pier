@@ -1,4 +1,4 @@
-UUID := macdock@shfqh
+UUID := macdock@sanitydub.github.io
 SCHEMA := org.gnome.shell.extensions.macdock.gschema.xml
 INSTALL_DIR := $(HOME)/.local/share/gnome-shell/extensions/$(UUID)
 
