@@ -2,7 +2,7 @@
   "uuid": "macdock@sanitydub.github.io",
   "name": "MacDock",
   "description": "A macOS-style application dock with hover magnification, launch bounce, running indicators and intellihide.",
-  "shell-version": ["46", "47", "48", "49"],
+  "shell-version": ["46", "47", "48", "49", "50"],
   "settings-schema": "org.gnome.shell.extensions.macdock",
   "version-name": "0.1.0",
   "url": "https://github.com/sanitydub/macdock"

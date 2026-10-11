@@ -5,6 +5,7 @@ import Meta from 'gi://Meta';
 import Shell from 'gi://Shell';
 import St from 'gi://St';
 
+import * as Config from 'resource:///org/gnome/shell/misc/config.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
@@ -13,6 +14,11 @@ import * as Geo from './util/geometry.js';
 
 const REVEAL_DURATION = 220;
 const TOOLTIP_GAP = 6;
+
+// GNOME 50 dropped X11 and with it the 'affectsInputRegion' chrome parameter,
+// which it now rejects. Only pass it to older shells, where X11 sessions need it.
+const SHELL_MAJOR = parseInt(Config.PACKAGE_VERSION.split('.')[0]);
+const NO_INPUT_REGION = SHELL_MAJOR < 50 ? {affectsInputRegion: false} : {};
 
 /** All dock geometry in physical pixels (logical * scale factor). */
 function computeMetrics(settings) {
@@ -92,11 +98,11 @@ export const Dock = GObject.registerClass({
         // Invisible full-width actor that reserves space (struts) so maximized
         // windows stop at the dock. Disabled while autohide is on.
         this._strut = new St.Widget({reactive: false});
-        Main.layoutManager.addChrome(this._strut, {affectsStruts: true, affectsInputRegion: false});
+        Main.layoutManager.addChrome(this._strut, {affectsStruts: true, ...NO_INPUT_REGION});
         Main.layoutManager.addChrome(this, {affectsStruts: false, trackFullscreen: true});
 
         this._tooltip = new St.Label({style_class: 'macdock-tooltip', visible: false});
-        Main.layoutManager.addTopChrome(this._tooltip, {affectsInputRegion: false});
+        Main.layoutManager.addTopChrome(this._tooltip, {...NO_INPUT_REGION});
 
         this.connect('notify::hover', () => {
             if (!this.hover)
