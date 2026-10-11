@@ -6,6 +6,7 @@ import Shell from 'gi://Shell';
 import St from 'gi://St';
 
 import * as Config from 'resource:///org/gnome/shell/misc/config.js';
+import * as DND from 'resource:///org/gnome/shell/ui/dnd.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
@@ -65,6 +66,10 @@ export const Dock = GObject.registerClass({
         'hover-changed': {},
         'menu-state-changed': {},
         'item-launching': {param_types: [GObject.TYPE_OBJECT]},
+        'item-drag-begin': {param_types: [GObject.TYPE_OBJECT]},
+        'item-drag-cancelled': {param_types: [GObject.TYPE_OBJECT]},
+        'item-drag-end': {param_types: [GObject.TYPE_OBJECT, GObject.TYPE_BOOLEAN]},
+        'drag-state-changed': {},
     },
 }, class Dock extends St.Widget {
     constructor(settings, model, monitor, monitorIndex, openSettings) {
@@ -78,6 +83,10 @@ export const Dock = GObject.registerClass({
         this.edge = settings.get_string('position');
         this.metrics = computeMetrics(settings);
         this.menuOpen = false;
+        this.dragging = false;
+        // Set by a feature to receive drag-over/drop on the dock (see handleDragOver).
+        this.dropHandler = null;
+        this._delegate = this;
 
         this._revealed = true;
         this._items = new Map();
@@ -137,7 +146,27 @@ export const Dock = GObject.registerClass({
     }
 
     getItemForApp(app) {
-        return this._items.get(`app:${app.get_id()}`) ?? null;
+        const id = app.get_id();
+        return this._items.get(`pin:${id}`) ?? this._items.get(`app:${id}`) ?? null;
+    }
+
+    /** Move an item to @index in the dock without changing the app model. */
+    moveItem(item, index) {
+        this._box.set_child_at_index(item, index);
+    }
+
+    /** Put items back in model order, undoing any moveItem(). */
+    restoreOrder() {
+        this._syncItems();
+    }
+
+    // DND drop-target delegate; forwarded to the feature that handles drags.
+    handleDragOver(source, actor, x, y) {
+        return this.dropHandler?.handleDragOver(source, actor, x, y) ?? DND.DragMotionResult.CONTINUE;
+    }
+
+    acceptDrop(source, actor) {
+        return this.dropHandler?.acceptDrop(source, actor) ?? false;
     }
 
     /** Stage-coordinate centre of every item along the dock axis, at scale 1. */
@@ -194,6 +223,15 @@ export const Dock = GObject.registerClass({
             this._strut.visible = enabled;
     }
 
+    setDragging(dragging) {
+        if (this.dragging === dragging)
+            return;
+        this.dragging = dragging;
+        if (dragging)
+            this.hideTooltip();
+        this.emit('drag-state-changed');
+    }
+
     setMenuOpen(open) {
         this.menuOpen = open;
         if (open)
@@ -238,8 +276,10 @@ export const Dock = GObject.registerClass({
 
         if (this._settings.get_boolean('show-apps-button'))
             add('show-apps', () => new ShowAppsItem(this));
+        // Pinned and running items use different keys so (un)pinning recreates
+        // the item, giving it (or taking away) its draggable.
         for (const app of pinned)
-            add(`app:${app.get_id()}`, () => new AppDockItem(this, app));
+            add(`pin:${app.get_id()}`, () => new AppDockItem(this, app, true));
         if (running.length > 0 && wanted.length > 0)
             add('separator', () => new DockSeparator(this));
         for (const app of running)
@@ -264,7 +304,7 @@ export const Dock = GObject.registerClass({
 
     _connectItem(item) {
         item.connect('notify::hover', () => {
-            if (item.hover && !this.menuOpen && item.tooltipText)
+            if (item.hover && !this.menuOpen && !this.dragging && item.tooltipText)
                 this._showTooltip(item);
             else if (this._tooltipItem === item)
                 this.hideTooltip();

@@ -56,6 +56,11 @@ export class AppModel extends Signals.EventEmitter {
         this._favorites.removeFavorite(app.get_id());
     }
 
+    /** Move a pinned app to index @pos among the pinned apps. */
+    moveTo(app, pos) {
+        this._favorites.moveFavoriteToPos(app.get_id(), pos);
+    }
+
     _queueChanged() {
         if (this._idleId)
             return;

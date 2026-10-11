@@ -1,4 +1,5 @@
 import {Autohide} from './autohide.js';
+import {DragReorder} from './dragReorder.js';
 import {LaunchBounce} from './launchBounce.js';
 import {Magnification} from './magnification.js';
 
@@ -17,4 +18,5 @@ export const FEATURES = [
     Magnification,
     LaunchBounce,
     Autohide,
+    DragReorder,
 ];

@@ -53,6 +53,7 @@ export class Autohide {
                 this._evaluate();
             },
             'menu-state-changed', () => this._evaluate(),
+            'drag-state-changed', () => this._evaluate(),
             this);
         Main.overview.connectObject(
             'showing', () => this._evaluate(),
@@ -108,6 +109,7 @@ export class Autohide {
             Main.overview.visible ||
             this._dock.hover ||
             this._dock.menuOpen ||
+            this._dock.dragging ||
             this._pressureReveal ||
             (this._mode === 'intellihide' && !this._overlapped);
     }

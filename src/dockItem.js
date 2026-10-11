@@ -4,6 +4,7 @@ import Shell from 'gi://Shell';
 import St from 'gi://St';
 
 import * as BoxPointer from 'resource:///org/gnome/shell/ui/boxpointer.js';
+import * as DND from 'resource:///org/gnome/shell/ui/dnd.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 import {gettext as _} from 'resource:///org/gnome/shell/extensions/extension.js';
@@ -119,6 +120,11 @@ class DockIcon extends St.Button {
         this._dot.visible = visible;
     }
 
+    /** Hide the icon and dot but keep the item's space, e.g. while it is being dragged. */
+    setSlotEmpty(empty) {
+        this._content.opacity = empty ? 0 : 255;
+    }
+
     setIconScale(scale) {
         const m = this._metrics;
         const iconPx = Math.round(m.base * scale);
@@ -161,19 +167,45 @@ class DockIcon extends St.Button {
 
 export const AppDockItem = GObject.registerClass(
 class AppDockItem extends DockIcon {
-    constructor(dock, app) {
+    constructor(dock, app, pinned = false) {
         super(dock, size => app.create_icon_texture(size));
 
         this.app = app;
+        this.pinned = pinned;
 
         this.app.connectObject('notify::state', () => this.syncDot(), this);
         this.connect('clicked', (actor, button) => this._onClicked(button));
+
+        // Pinned apps can be dragged to reorder or remove them (features/dragReorder.js).
+        if (pinned) {
+            this._delegate = this;
+            this._draggable = DND.makeDraggable(this, {timeoutThreshold: 200});
+            this._draggable.connectObject(
+                'drag-begin', () => dock.emit('item-drag-begin', this),
+                'drag-cancelled', () => dock.emit('item-drag-cancelled', this),
+                'drag-end', (draggable, time, success) => dock.emit('item-drag-end', this, success),
+                this);
+        }
 
         this.syncDot();
     }
 
     get tooltipText() {
         return this.app.get_name();
+    }
+
+    /** A free-standing copy of the icon at its current on-screen size. */
+    getDragActor() {
+        const m = this._metrics;
+        const actor = this.app.create_icon_texture(m.maxLogical);
+        actor.set_size(m.max, m.max);
+        const scale = this.icon.get_transformed_size()[0] / m.max;
+        actor.set_scale(scale, scale);
+        return actor;
+    }
+
+    getDragActorSource() {
+        return this.icon;
     }
 
     syncDot() {

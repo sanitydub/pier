@@ -39,6 +39,10 @@ export class Magnification {
                 if (this._dock.menuOpen)
                     this._animateStrength(0);
             },
+            'drag-state-changed', () => {
+                if (this._dock.dragging)
+                    this._animateStrength(0);
+            },
             this);
     }
 
@@ -50,7 +54,7 @@ export class Magnification {
     }
 
     _onMotion(event) {
-        if (this._dock.menuOpen)
+        if (this._dock.menuOpen || this._dock.dragging)
             return;
 
         const [x, y] = event.get_coords();
