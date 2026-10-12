@@ -55,7 +55,13 @@ class WallpaperCopy extends St.Widget {
 export function trackOverviewProgress(owner, callback) {
     const adjustment = Main.overview._overview?._controls?._stateAdjustment;
     if (adjustment) {
-        const sync = () => callback(Math.min(Math.max(adjustment.value, 0), 1));
+        // The adjustment isn't always reset when the overview closes (e.g.
+        // after the overview shown at login), so outside the overview the
+        // progress is 0 whatever it says. While opening and closing, the
+        // overview counts as visible.
+        const sync = () => callback(Main.overview.visible
+            ? Math.min(Math.max(adjustment.value, 0), 1)
+            : 0);
         adjustment.connectObject('notify::value', sync, owner);
         Main.overview.connectObject('showing', sync, 'hidden', sync, owner);
         sync();
