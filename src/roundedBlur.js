@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+import Clutter from 'gi://Clutter';
 import Cogl from 'gi://Cogl';
 import GObject from 'gi://GObject';
 import Shell from 'gi://Shell';
@@ -7,6 +8,7 @@ import St from 'gi://St';
 
 import * as Background from 'resource:///org/gnome/shell/ui/background.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import * as Overview from 'resource:///org/gnome/shell/ui/overview.js';
 
 const BLUR_RADIUS = 40;
 const BLUR_BRIGHTNESS = 0.9;
@@ -83,6 +85,8 @@ class RoundedBlur extends St.Widget {
 
         this.connect('notify::allocation', () => this._syncWallpaper());
         this.connect('destroy', () => this._bgManager.destroy());
+
+        this._trackOverview();
     }
 
     get inset() {
@@ -98,6 +102,43 @@ class RoundedBlur extends St.Widget {
     /** Call when this actor moves on screen without being reallocated (e.g. its parent is translated). */
     syncPosition() {
         this._syncWallpaper();
+    }
+
+    // In the overview GNOME shrinks the desktop (and its wallpaper) into a
+    // card over a dark backdrop, so our wallpaper copy no longer matches
+    // what's behind the dock. Fade it out as the overview opens.
+    _trackOverview() {
+        // The overview's progress: 0 on the desktop, 1 in the window picker,
+        // 2 in the app grid. It follows touchpad swipes as well as the
+        // Super-key animation. It's internal, so fall back to the signals.
+        const progress = Main.overview._overview?._controls?._stateAdjustment;
+        if (progress) {
+            const sync = () => this._setOverviewProgress(Math.min(Math.max(progress.value, 0), 1));
+            progress.connectObject('notify::value', sync, this);
+            sync();
+            return;
+        }
+
+        const fadeTo = opacity => {
+            this.show();
+            this.ease({
+                opacity,
+                duration: Overview.ANIMATION_TIME,
+                mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+                onComplete: () => (this.visible = opacity > 0),
+            });
+        };
+        Main.overview.connectObject(
+            'showing', () => fadeTo(0),
+            'hiding', () => fadeTo(255),
+            this);
+        this._setOverviewProgress(Main.overview.visible ? 1 : 0);
+    }
+
+    _setOverviewProgress(progress) {
+        this.opacity = Math.round(255 * (1 - progress));
+        // Skip the blur entirely once it's fully faded out.
+        this.visible = this.opacity > 0;
     }
 
     _syncShape() {
