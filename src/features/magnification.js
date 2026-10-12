@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 import Clutter from 'gi://Clutter';
 
 import * as Geo from '../util/geometry.js';

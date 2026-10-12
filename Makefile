@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+
 UUID := pier@sanitydub.github.io
 SCHEMA := org.gnome.shell.extensions.pier.gschema.xml
 INSTALL_DIR := $(HOME)/.local/share/gnome-shell/extensions/$(UUID)
@@ -29,6 +31,7 @@ pack:
 	mkdir -p dist
 	gnome-extensions pack --force --out-dir=dist \
 		--extra-source=src \
+		--extra-source=LICENSE \
 		--schema=schemas/$(SCHEMA) \
 		.
 

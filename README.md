@@ -153,3 +153,13 @@ Useful dock API:
 - Background blur is rectangular and does not follow the rounded corners.
 - Apps can be dragged in only from the overview. GNOME leaves pinned apps out of the app grid, so the grid only offers apps that aren't pinned yet.
 - Most recently tested on GNOME 50 (Ubuntu 26.04). Drag and drop uses GNOME's standard drag-and-drop API, which GNOME 46–49 also have, but it hasn't been tested there.
+
+## License
+
+Copyright (C) 2026 sanitydub
+
+Pier is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 2 of the License, or (at your option) any later version.
+
+Pier is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the [GNU General Public License](LICENSE) for more details.
+
+SPDX-License-Identifier: `GPL-2.0-or-later`

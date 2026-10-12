@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 import Clutter from 'gi://Clutter';
 
 // Orientation helpers. Dock code thinks in two axes:

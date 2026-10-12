@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 import {Autohide} from './autohide.js';
 import {DragReorder} from './dragReorder.js';
 import {LaunchBounce} from './launchBounce.js';
