@@ -6,7 +6,6 @@ import GObject from 'gi://GObject';
 import Meta from 'gi://Meta';
 import St from 'gi://St';
 
-import * as Config from 'resource:///org/gnome/shell/misc/config.js';
 import * as DND from 'resource:///org/gnome/shell/ui/dnd.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
@@ -15,6 +14,7 @@ import {AppDockItem, DockPlaceholder, DockSeparator, ShowAppsItem} from './dockI
 import {OverviewStrip} from './overviewStrip.js';
 import {RoundedBlur} from './roundedBlur.js';
 import * as Geo from './util/geometry.js';
+import {SHELL_MAJOR} from './util/shell.js';
 
 const REVEAL_DURATION = 220;
 const SLIDE_DURATION = 180;
@@ -22,7 +22,6 @@ const TOOLTIP_GAP = 6;
 
 // GNOME 50 dropped X11 and with it the 'affectsInputRegion' chrome parameter,
 // which it now rejects. Only pass it to older shells, where X11 sessions need it.
-const SHELL_MAJOR = parseInt(Config.PACKAGE_VERSION.split('.')[0]);
 const NO_INPUT_REGION = SHELL_MAJOR < 50 ? {affectsInputRegion: false} : {};
 
 /** All dock geometry in physical pixels (logical * scale factor). */

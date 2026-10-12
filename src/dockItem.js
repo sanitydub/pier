@@ -15,6 +15,7 @@ import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 import {gettext as _} from 'resource:///org/gnome/shell/extensions/extension.js';
 
 import * as Geo from './util/geometry.js';
+import {SHELL_MAJOR} from './util/shell.js';
 
 // Icons scale from the point touching the screen edge, so magnified icons grow away from it.
 const ICON_PIVOTS = {
@@ -24,6 +25,19 @@ const ICON_PIVOTS = {
 };
 
 const FADE_IN_DURATION = 180;
+
+// GNOME 51 renamed ONE/TWO/THREE; the old names are deprecated.
+const BUTTONS = St.ButtonMask.PRIMARY !== undefined
+    ? St.ButtonMask.PRIMARY | St.ButtonMask.MIDDLE | St.ButtonMask.SECONDARY
+    : St.ButtonMask.ONE | St.ButtonMask.TWO | St.ButtonMask.THREE;
+
+/** Open a popup menu with the full animation. GNOME 51 takes options instead of an animation constant. */
+function openMenu(menu) {
+    if (SHELL_MAJOR >= 51)
+        menu.open({animate: true});
+    else
+        menu.open(BoxPointer.PopupAnimation.FULL);
+}
 const PLACEHOLDER_DURATION = 180;
 
 const MENU_SIDES = {
@@ -57,7 +71,7 @@ class DockIcon extends St.Button {
             style_class: 'pier-item',
             track_hover: true,
             can_focus: false,
-            button_mask: St.ButtonMask.ONE | St.ButtonMask.TWO | St.ButtonMask.THREE,
+            button_mask: BUTTONS,
         });
 
         this._dock = dock;
@@ -356,7 +370,7 @@ class AppDockItem extends DockIcon {
             menu.addAction(_('Quit'), () => this.app.request_quit());
         }
 
-        menu.open(BoxPointer.PopupAnimation.FULL);
+        openMenu(menu);
     }
 });
 
@@ -393,7 +407,7 @@ class ShowAppsItem extends DockIcon {
         const menu = this._getMenu();
         if (menu.isEmpty())
             menu.addAction(_('Dock Settings…'), () => this._dock.openSettings());
-        menu.open(BoxPointer.PopupAnimation.FULL);
+        openMenu(menu);
     }
 });
 

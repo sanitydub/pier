@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+import Clutter from 'gi://Clutter';
 import Cogl from 'gi://Cogl';
 import GObject from 'gi://GObject';
 import Shell from 'gi://Shell';
@@ -32,31 +33,46 @@ float d = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r;
 cogl_color_out *= clamp(0.5 - d, 0.0, 1.0);
 `;
 
-export const RoundedCornerEffect = GObject.registerClass(
-class RoundedCornerEffect extends Shell.GLSLEffect {
-    _init(params) {
-        super._init(params);
-        this._locations = {};
-        for (const name of ['width', 'height', 'inset', 'box_w', 'box_h', 'radius', 'top_radius'])
-            this._locations[name] = this.get_uniform_location(name);
-    }
+/**
+ * The shape is `inset` in from the actor's edges on every side, unless a
+ * smaller box size is given, which is anchored `inset` from the top-left.
+ */
+function setShape(width, height, inset, radius, topRadius = radius,
+    boxWidth = width - 2 * inset, boxHeight = height - 2 * inset) {
+    const uniforms = {width, height, inset, radius, top_radius: topRadius, box_w: boxWidth, box_h: boxHeight};
+    for (const [name, value] of Object.entries(uniforms))
+        this._setUniform(name, value);
+    this.queue_repaint();
+}
 
-    vfunc_build_pipeline() {
-        this.add_glsl_snippet(Cogl.SnippetHook.FRAGMENT, CORNER_DECLARATIONS, CORNER_CODE, false);
-    }
+// GNOME 51 replaced Shell.GLSLEffect with Clutter.ShaderEffect, which takes
+// its snippet from vfunc_get_static_snippet() and sets uniforms by name. A
+// class can't declare a virtual function its parent lacks, so define the
+// effect against whichever base this Shell has.
+const RoundedCornerEffectClass = Shell.GLSLEffect
+    ? class RoundedCornerEffect extends Shell.GLSLEffect {
+        vfunc_build_pipeline() {
+            this.add_glsl_snippet(Cogl.SnippetHook.FRAGMENT, CORNER_DECLARATIONS, CORNER_CODE, false);
+        }
 
-    /**
-     * The shape is `inset` in from the actor's edges on every side, unless a
-     * smaller box size is given, which is anchored `inset` from the top-left.
-     */
-    setShape(width, height, inset, radius, topRadius = radius,
-        boxWidth = width - 2 * inset, boxHeight = height - 2 * inset) {
-        const uniforms = {width, height, inset, radius, top_radius: topRadius, box_w: boxWidth, box_h: boxHeight};
-        for (const [name, value] of Object.entries(uniforms))
+        _setUniform(name, value) {
+            this._locations ??= {};
+            this._locations[name] ??= this.get_uniform_location(name);
             this.set_uniform_float(this._locations[name], 1, [value]);
-        this.queue_repaint();
+        }
     }
-});
+    : class RoundedCornerEffect extends Clutter.ShaderEffect {
+        vfunc_get_static_snippet() {
+            return Cogl.Snippet.new(Cogl.SnippetHook.FRAGMENT, CORNER_DECLARATIONS, CORNER_CODE);
+        }
+
+        _setUniform(name, value) {
+            this.set_uniform_float(name, 1, [value]);
+        }
+    };
+RoundedCornerEffectClass.prototype.setShape = setShape;
+
+export const RoundedCornerEffect = GObject.registerClass(RoundedCornerEffectClass);
 
 /**
  * A blurred copy of the wallpaper, cut to a rounded rectangle.
