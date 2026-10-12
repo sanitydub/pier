@@ -54,11 +54,21 @@ Only pinned apps can be dragged. Removing an app shows GNOME's usual "unpinned" 
 
 ## Installing from source
 
+You need GNOME Shell 46–50, plus `git` and `make`, which a fresh Ubuntu or Debian desktop may not have:
+
+```bash
+sudo apt install git make
+```
+
+Then:
+
 ```bash
 git clone https://github.com/sanitydub/pier.git
 cd pier
 make install
 ```
+
+`make install` links the extensions folder to this clone rather than copying it, so keep the `pier` folder where it is: if you move or delete it, Pier disappears at your next login. To install a standalone copy instead, run `make pack` and then `gnome-extensions install dist/pier@sanitydub.github.io.shell-extension.zip`, after which the clone can go.
 
 Log out and back in (Wayland can't load new extension code into a running session), then enable it:
 
@@ -73,6 +83,8 @@ gnome-extensions disable ubuntu-dock@ubuntu.com
 ```
 
 Open the preferences with `gnome-extensions prefs pier@sanitydub.github.io`, or right-click the Show Applications button.
+
+To update a clone installed with `make install`, run `git pull` and `make install` in the `pier` folder, then log out and back in.
 
 ## Development
 
