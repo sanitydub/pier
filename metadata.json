@@ -1,7 +1,7 @@
 {
   "uuid": "pier@sanitydub.github.io",
   "name": "Pier",
-  "description": "A floating dock for your apps, with hover magnification, drag-and-drop pinning, launch animations, running indicators and smart autohide.",
+  "description": "A floating dock for your apps, with hover magnification, drag-and-drop pinning, launch animations, running indicators and smart autohide.\n\nAI disclosure: this extension's code is 100% AI-generated and has not been independently reviewed. Proceed with caution and use it at your own risk.",
   "shell-version": ["46", "47", "48", "49", "50"],
   "settings-schema": "org.gnome.shell.extensions.pier",
   "version-name": "0.1.0",
