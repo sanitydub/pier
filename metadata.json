@@ -1,9 +1,9 @@
 {
-  "uuid": "macdock@sanitydub.github.io",
-  "name": "MacDock",
-  "description": "A macOS-style application dock with hover magnification, launch bounce, running indicators and intellihide.",
+  "uuid": "pier@sanitydub.github.io",
+  "name": "Pier",
+  "description": "A floating dock for your apps, with hover magnification, drag-and-drop pinning, launch animations, running indicators and smart autohide.",
   "shell-version": ["46", "47", "48", "49", "50"],
-  "settings-schema": "org.gnome.shell.extensions.macdock",
+  "settings-schema": "org.gnome.shell.extensions.pier",
   "version-name": "0.1.0",
-  "url": "https://github.com/sanitydub/macdock"
+  "url": "https://github.com/sanitydub/pier"
 }

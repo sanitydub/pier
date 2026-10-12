@@ -49,7 +49,7 @@ const DockIcon = GObject.registerClass(
 class DockIcon extends St.Button {
     constructor(dock, createIcon) {
         super({
-            style_class: 'macdock-item',
+            style_class: 'pier-item',
             track_hover: true,
             can_focus: false,
             button_mask: St.ButtonMask.ONE | St.ButtonMask.TWO | St.ButtonMask.THREE,
@@ -69,7 +69,7 @@ class DockIcon extends St.Button {
         this.icon.set_pivot_point(...ICON_PIVOTS[this._position]);
         this._content.add_child(this.icon);
 
-        this._dot = new St.Widget({style_class: 'macdock-dot', visible: false});
+        this._dot = new St.Widget({style_class: 'pier-dot', visible: false});
         this._dot.set_size(this._metrics.dot, this._metrics.dot);
         this._content.add_child(this._dot);
 
@@ -90,7 +90,7 @@ class DockIcon extends St.Button {
     _getMenu() {
         if (!this._menu) {
             this._menu = new PopupMenu.PopupMenu(this, 0.5, MENU_SIDES[this._position]);
-            this._menu.actor.add_style_class_name('macdock-menu');
+            this._menu.actor.add_style_class_name('pier-menu');
             this._menu.connect('open-state-changed', (menu, open) => {
                 this._dock.setMenuOpen(open);
                 if (!open)
@@ -310,7 +310,7 @@ class ShowAppsItem extends DockIcon {
         super(dock, size => new St.Icon({
             icon_name: 'view-app-grid-symbolic',
             icon_size: size,
-            style_class: 'macdock-show-apps-icon',
+            style_class: 'pier-show-apps-icon',
         }));
 
         this.connect('clicked', (actor, button) => {
@@ -344,14 +344,14 @@ class ShowAppsItem extends DockIcon {
 export const DockSeparator = GObject.registerClass(
 class DockSeparator extends St.Widget {
     constructor(dock) {
-        super({style_class: 'macdock-separator'});
+        super({style_class: 'pier-separator'});
 
         const m = dock.metrics;
         const cross = m.topPad + m.base + m.edgePad;
         const length = Math.round(m.base * 0.75);
         const thickness = Math.max(1, Math.round(m.sf));
 
-        const line = new St.Widget({style_class: 'macdock-separator-line'});
+        const line = new St.Widget({style_class: 'pier-separator-line'});
         this.add_child(line);
 
         if (Geo.isVertical(dock.edge)) {

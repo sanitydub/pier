@@ -1,5 +1,5 @@
-UUID := macdock@sanitydub.github.io
-SCHEMA := org.gnome.shell.extensions.macdock.gschema.xml
+UUID := pier@sanitydub.github.io
+SCHEMA := org.gnome.shell.extensions.pier.gschema.xml
 INSTALL_DIR := $(HOME)/.local/share/gnome-shell/extensions/$(UUID)
 
 .PHONY: all schemas install uninstall enable disable pack nested logs clean

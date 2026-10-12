@@ -1,6 +1,6 @@
-# MacDock
+# Pier
 
-A macOS-style application dock for GNOME Shell 46–50.
+A floating dock for GNOME Shell 46–50. Pier keeps your favourite apps one click away, with icons that grow under the pointer, drag-and-drop pinning and reordering, launch animations, running indicators and an autohide that steps out of the way of your windows.
 
 ## Features
 
@@ -39,24 +39,24 @@ Only pinned apps can be dragged. Removing an app shows GNOME's usual "unpinned" 
 ## Installing from source
 
 ```bash
-git clone https://github.com/sanitydub/macdock.git
-cd macdock
+git clone https://github.com/sanitydub/pier.git
+cd pier
 make install
 ```
 
 Log out and back in (Wayland can't load new extension code into a running session), then enable it:
 
 ```bash
-gnome-extensions enable macdock@sanitydub.github.io
+gnome-extensions enable pier@sanitydub.github.io
 ```
 
-Turn off other docks such as Ubuntu Dock or Dash to Dock while using MacDock, or the two will overlap:
+Turn off other docks such as Ubuntu Dock or Dash to Dock while using Pier, or the two will overlap:
 
 ```bash
 gnome-extensions disable ubuntu-dock@ubuntu.com
 ```
 
-Open the preferences with `gnome-extensions prefs macdock@sanitydub.github.io`, or right-click the Show Applications button.
+Open the preferences with `gnome-extensions prefs pier@sanitydub.github.io`, or right-click the Show Applications button.
 
 ## Development
 
@@ -74,8 +74,8 @@ make nested         # start a nested GNOME Shell in a window (no logout needed)
 `make nested` uses `gnome-shell --devkit` on GNOME 49 and newer, and `--nested` on older versions. Inside the nested shell's terminal (or from another terminal with the same session):
 
 ```bash
-gnome-extensions enable macdock@sanitydub.github.io
-gnome-extensions prefs macdock@sanitydub.github.io
+gnome-extensions enable pier@sanitydub.github.io
+gnome-extensions prefs pier@sanitydub.github.io
 ```
 
 - Logs: `make logs` (or `journalctl -f -o cat /usr/bin/gnome-shell`)

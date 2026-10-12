@@ -338,7 +338,7 @@ export class DragReorder {
         const drag = this._drag;
         if (!drag || drag.label)
             return;
-        drag.label = new St.Label({style_class: 'macdock-tooltip', text: _('Remove'), opacity: 0});
+        drag.label = new St.Label({style_class: 'pier-tooltip', text: _('Remove'), opacity: 0});
         Main.uiGroup.add_child(drag.label);
         Shell.util_set_hidden_from_pick(drag.label, true);
         this._positionRemoveLabel();

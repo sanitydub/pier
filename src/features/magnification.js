@@ -6,7 +6,7 @@ const RAMP_IN_DURATION = 120;
 const RAMP_OUT_DURATION = 220;
 
 /**
- * macOS-style hover magnification. Each icon's scale follows a cosine falloff
+ * Hover magnification. Each icon's scale follows a cosine falloff
  * of its distance to the pointer, measured against the *unmagnified* layout so
  * the result doesn't feed back into itself. A global "strength" ramps in on
  * enter and out on leave so icons grow and shrink smoothly.

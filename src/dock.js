@@ -80,7 +80,7 @@ export const Dock = GObject.registerClass({
     },
 }, class Dock extends St.Widget {
     constructor(settings, model, monitor, monitorIndex, openSettings) {
-        super({name: 'macdock', reactive: true, track_hover: true});
+        super({name: 'pier', reactive: true, track_hover: true});
 
         this._settings = settings;
         this.openSettings = openSettings;
@@ -104,10 +104,10 @@ export const Dock = GObject.registerClass({
         this._tooltipLater = 0;
         this._plannedAlong = null; // item -> along position after a pending relayout
 
-        this._background = new St.Widget({style_class: 'macdock-background'});
+        this._background = new St.Widget({style_class: 'pier-background'});
         this.add_child(this._background);
 
-        this._box = new St.BoxLayout({style_class: 'macdock-box'});
+        this._box = new St.BoxLayout({style_class: 'pier-box'});
         setBoxVertical(this._box, Geo.isVertical(this.edge));
         this.add_child(this._box);
 
@@ -119,7 +119,7 @@ export const Dock = GObject.registerClass({
         Main.layoutManager.addChrome(this._strut, {affectsStruts: true, ...NO_INPUT_REGION});
         Main.layoutManager.addChrome(this, {affectsStruts: false, trackFullscreen: true});
 
-        this._tooltip = new St.Label({style_class: 'macdock-tooltip', visible: false});
+        this._tooltip = new St.Label({style_class: 'pier-tooltip', visible: false});
         Main.layoutManager.addTopChrome(this._tooltip, {...NO_INPUT_REGION});
 
         // On shell shutdown the layout manager destroys these before the dock,
@@ -488,7 +488,7 @@ export const Dock = GObject.registerClass({
                 this._blur.radius = 40;
             else
                 this._blur.sigma = 20;
-            this._background.add_effect_with_name('macdock-blur', this._blur);
+            this._background.add_effect_with_name('pier-blur', this._blur);
         } else if (!wanted && this._blur) {
             this._background.remove_effect(this._blur);
             this._blur = null;

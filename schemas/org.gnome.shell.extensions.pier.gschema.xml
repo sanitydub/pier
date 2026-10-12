@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schemalist>
-  <schema id="org.gnome.shell.extensions.macdock" path="/org/gnome/shell/extensions/macdock/">
+  <schema id="org.gnome.shell.extensions.pier" path="/org/gnome/shell/extensions/pier/">
 
     <!-- Appearance -->
     <key name="icon-size" type="i">

@@ -55,7 +55,7 @@ function scaleRow(settings, key, title, min, max, step) {
     return row;
 }
 
-export default class MacDockPreferences extends ExtensionPreferences {
+export default class PierPreferences extends ExtensionPreferences {
     fillPreferencesWindow(window) {
         const settings = this.getSettings();
         window._settings = settings; // keep alive for the window's lifetime
