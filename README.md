@@ -101,6 +101,42 @@ gnome-extensions prefs pier@sanitydub.github.io
 
 To change the UUID, edit both `metadata.json` and the `UUID` line in the `Makefile`.
 
+### Testing
+
+```bash
+make test
+```
+
+runs [`tests/smoke.sh`](tests/smoke.sh): it starts a private, headless GNOME Shell (its own D-Bus, in-memory settings and a throwaway data folder, so your session isn't touched), loads Pier, and checks every position and autohide mode (including the reserved strip), the frosted glass, magnification, the overview and app grid, and disabling and re-enabling. It fails if a check fails or GNOME Shell logs an error. It takes about 30 seconds and needs a GNOME Shell with `--headless` support.
+
+The test loads a small helper extension from [`tests/helper/`](tests/helper/) that turns on GNOME Shell's unsafe mode, so the script can inspect the shell over D-Bus. It's only ever loaded into the throwaway test shell; never install it on a real session.
+
+### Preparing for a new GNOME release
+
+GNOME ships a new version every March and September, and the porting guide for extensions appears on [gjs.guide](https://gjs.guide/extensions/upgrading/) around the beta. For each release:
+
+1. Read the porting guide and check the code against every removed or renamed API, and against the internals listed below.
+2. Install the new version (for example a development release in a VM) and run `make test` there, then try the dock by hand.
+3. Only then add the version to `shell-version` in `metadata.json`, and update the tested-version note under Known limitations.
+
+Prefer feature detection (`'orientation' in box`, `Shell.GLSLEffect ?? …`) to version checks, so the code keeps working when something is renamed. `src/util/shell.js` has the running major version for the few cases that need it.
+
+**GNOME Shell internals Pier relies on.** These are private and the most likely to change. Each has a fallback, noted in brackets:
+
+- `Main.overview._overview._controls._stateAdjustment`: the overview's animation progress, for the frosted glass fade and the overview strip (`src/wallpaper.js`; falls back to the overview's showing/hiding signals)
+- `WorkspaceBackground` from `ui/workspace.js` and its `_workarea`, `_bgManager`, `_stateAdjustment`, `_monitorIndex`, plus its parent's `metaWorkspace`: the desktop card the overview strip follows (`src/overviewStrip.js`; the strip isn't drawn)
+- `Main.overview.dash._adjustIconSize()` and `_queueRedisplay()`: keeping the hidden stock dash from throwing (`src/dockManager.js`; skipped if missing)
+- `ui/background.js`'s `BackgroundManager`: the wallpaper copies (`src/wallpaper.js`)
+- GNOME Shell computing struts from a chrome actor's size, not its visibility (`Dock._applyStrut()` in `src/dock.js`)
+
+**Version-specific code:**
+
+- GNOME 51: `Shell.GLSLEffect` was replaced by `Clutter.ShaderEffect` (`RoundedCornerEffect` in `src/roundedBlur.js`); popup menus take `{animate}` instead of an animation constant (`openMenu()` in `src/dockItem.js`); `St.ButtonMask` was renamed to `PRIMARY`/`MIDDLE`/`SECONDARY`
+- GNOME 50: chrome no longer takes `affectsInputRegion` (`src/dock.js`)
+- GNOME 48: `St.BoxLayout` gained `orientation` (`setBoxVertical()` in `src/dock.js`)
+- GNOME 46: `Shell.BlurEffect`'s `sigma` became `radius` (`src/roundedBlur.js`)
+- Deprecated in GNOME 51 and due to be removed: connecting actor event signals such as `motion-event` (magnification). Move to `Clutter.MotionController` once GNOME 51 is the oldest supported version.
+
 ## Layout
 
 ```
@@ -124,6 +160,9 @@ src/features/                 pluggable behaviours
     autohide.js               autohide and intellihide, edge-pressure reveal
     dragReorder.js            drag to reorder, drag off to remove, drag in from the app grid
 src/util/geometry.js          orientation helpers (bottom/left/right)
+src/util/shell.js             the running GNOME Shell major version
+tests/smoke.sh                headless smoke test (make test)
+tests/helper/                 test-only helper extension used by smoke.sh
 ```
 
 ## Adding a feature
@@ -167,6 +206,7 @@ Useful dock API:
 - The overview polish (the frosted glass fading and the strip following the desktop) relies on internal parts of GNOME Shell's overview. If a future GNOME version changes them, Pier falls back to a plain fade or leaves the strip to GNOME.
 - Apps can be dragged in only from the overview. GNOME leaves pinned apps out of the app grid, so the grid only offers apps that aren't pinned yet.
 - Most recently tested on GNOME 50 (Ubuntu 26.04). Drag and drop uses GNOME's standard drag-and-drop API, which GNOME 46–49 also have, but it hasn't been tested there.
+- GNOME 51 isn't listed as supported yet. The code has been ported for its API changes (see *Preparing for a new GNOME release*), but it hasn't been tested on GNOME 51.
 
 ## License
 

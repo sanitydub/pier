@@ -1,0 +1,6 @@
+{
+  "uuid": "pier-test-helper@sanitydub.github.io",
+  "name": "Pier test helper",
+  "description": "Used only by tests/smoke.sh inside a throwaway headless GNOME Shell: turns on unsafe mode so the test can inspect the shell over D-Bus. Never install it on a real session.",
+  "shell-version": ["46", "47", "48", "49", "50", "51", "52"]
+}

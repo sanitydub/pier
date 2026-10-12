@@ -4,7 +4,7 @@ UUID := pier@sanitydub.github.io
 SCHEMA := org.gnome.shell.extensions.pier.gschema.xml
 INSTALL_DIR := $(HOME)/.local/share/gnome-shell/extensions/$(UUID)
 
-.PHONY: all schemas install uninstall enable disable pack nested logs clean
+.PHONY: all schemas install uninstall enable disable pack nested logs test clean
 
 all: schemas
 
@@ -43,6 +43,10 @@ nested:
 	else \
 		MUTTER_DEBUG_DUMMY_MODE_SPECS=1600x1000 dbus-run-session -- gnome-shell --nested --wayland; \
 	fi
+
+# Run Pier in a private, headless GNOME Shell and check it for errors (tests/smoke.sh).
+test: schemas
+	tests/smoke.sh
 
 logs:
 	journalctl -f -o cat /usr/bin/gnome-shell
