@@ -70,6 +70,18 @@ export class DockManager {
         this._features = FEATURES.map(Feature => new Feature(this._dock, this._settings));
         for (const feature of this._features)
             feature.enable();
+        this._reserveOverviewSpace();
+    }
+
+    // The overview lays out the workspaces and app grid above the stock dash,
+    // using its height even while it's hidden. Make the hidden dash as tall
+    // as a bottom dock so the overview keeps clear of it, as it does for the
+    // stock dash. Side docks don't need room: the workspace card is narrower
+    // than the screen.
+    _reserveOverviewSpace() {
+        const dock = this._dock;
+        const height = dock?.edge === 'bottom' ? Math.round(dock.getRevealedRect().height) : 0;
+        Main.overview.dash.set_height(height);
     }
 
     _teardown() {
@@ -102,7 +114,7 @@ export class DockManager {
     _hideStockDash() {
         const dash = Main.overview.dash;
         dash.hide();
-        // Zero height so the overview doesn't reserve space for it.
+        // Height is set by _reserveOverviewSpace() once the dock is built.
         dash.set_height(0);
         Main.overview.connectObject('showing', () => dash.hide(), this);
 
