@@ -118,7 +118,13 @@ export const Dock = GObject.registerClass({
 
         // Invisible full-width actor that reserves space (struts) so maximized
         // windows stop at the dock. Disabled while autohide is on.
+        //
+        // GNOME computes struts from the actor's size and ignores whether it's
+        // visible, and doesn't relayout hidden actors, so it's disabled by
+        // collapsing it to zero size while it stays shown.
         this._strut = new St.Widget({reactive: false});
+        this._strutsEnabled = true;
+        this._strutRect = null; // [x, y, width, height] when enabled
         Main.layoutManager.addChrome(this._strut, {affectsStruts: true, ...NO_INPUT_REGION});
         Main.layoutManager.addChrome(this, {affectsStruts: false, trackFullscreen: true});
 
@@ -271,14 +277,23 @@ export const Dock = GObject.registerClass({
     }
 
     setStrutsEnabled(enabled) {
-        if (this._strut)
-            this._strut.visible = enabled;
-        this._syncOverviewStrip();
+        this._strutsEnabled = enabled;
+        this._applyStrut();
     }
 
-    _syncOverviewStrip() {
-        const reserving = this.edge === Geo.Position.BOTTOM && Boolean(this._strut?.visible);
-        this._overviewStrip?.setInset(reserving ? Math.round(this._strut.height) : 0);
+    _applyStrut() {
+        const rect = this._strutRect;
+        if (this._strut && rect) {
+            const [x, y, width, height] = rect;
+            this._strut.set_position(x, y);
+            if (this._strutsEnabled)
+                this._strut.set_size(width, height);
+            else
+                this._strut.set_size(0, 0);
+        }
+
+        const reserving = this.edge === Geo.Position.BOTTOM && this._strutsEnabled && rect;
+        this._overviewStrip?.setInset(reserving ? rect[3] : 0);
     }
 
     setDragging(dragging) {
@@ -410,22 +425,19 @@ export const Dock = GObject.registerClass({
         case Geo.Position.LEFT:
             this.set_position(mon.x, mon.y + Math.round((mon.height - along) / 2));
             this.set_size(cross, along);
-            this._strut.set_position(mon.x, mon.y);
-            this._strut.set_size(strutCross, mon.height);
+            this._strutRect = [mon.x, mon.y, strutCross, mon.height];
             break;
         case Geo.Position.RIGHT:
             this.set_position(mon.x + mon.width - cross, mon.y + Math.round((mon.height - along) / 2));
             this.set_size(cross, along);
-            this._strut.set_position(mon.x + mon.width - strutCross, mon.y);
-            this._strut.set_size(strutCross, mon.height);
+            this._strutRect = [mon.x + mon.width - strutCross, mon.y, strutCross, mon.height];
             break;
         default:
             this.set_position(mon.x + Math.round((mon.width - along) / 2), mon.y + mon.height - cross);
             this.set_size(along, cross);
-            this._strut.set_position(mon.x, mon.y + mon.height - strutCross);
-            this._strut.set_size(mon.width, strutCross);
+            this._strutRect = [mon.x, mon.y + mon.height - strutCross, mon.width, strutCross];
         }
-        this._syncOverviewStrip();
+        this._applyStrut();
     }
 
     /**
