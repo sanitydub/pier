@@ -2,6 +2,8 @@
 
 A floating dock for GNOME Shell 46–50. Pier keeps your favourite apps one click away, with icons that grow under the pointer, drag-and-drop pinning and reordering, launch animations, running indicators and an autohide that steps out of the way of your windows.
 
+![Pier at the bottom of the screen, with the pointer over Files: Files and its neighbours are magnified, a tooltip reads "Files", and a dot marks a running app after the separator](docs/screenshot.png)
+
 > [!WARNING]
 > **AI disclosure: this extension's code is 100% AI-generated.**
 >
@@ -106,6 +108,7 @@ extension.js                  entry point: enable() / disable()
 prefs.js                      preferences window
 stylesheet.css                dock look
 schemas/                      GSettings schema
+docs/                         README screenshot (not shipped in the extension)
 src/dockManager.js            dock lifetime, rebuilds on monitor/setting changes, hides the stock dash
                               (sized to the dock, so the overview keeps clear of it)
 src/dock.js                   dock actor: background, item box, geometry, reserved strip (strut),
