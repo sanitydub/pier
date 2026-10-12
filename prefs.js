@@ -131,15 +131,34 @@ export default class PierPreferences extends ExtensionPreferences {
             title: _('About'),
             icon_name: 'help-about-symbolic',
         });
+        // The metadata description ends with a short AI disclosure paragraph;
+        // the full disclosure has its own group below, so show only the summary.
         const group = new Adw.PreferencesGroup({
             title: this.metadata.name,
-            description: this.metadata.description,
+            description: this.metadata.description.split('\n\n')[0],
         });
         group.add(new Adw.ActionRow({
             title: _('Version'),
             subtitle: this.metadata['version-name'] ?? String(this.metadata.version ?? ''),
         }));
         page.add(group);
+
+        const disclosure = new Adw.PreferencesGroup({title: _('AI disclosure')});
+        const aiRow = new Adw.ActionRow({
+            title: _('100% AI-generated code'),
+            subtitle: _('Every line of Pier was written by an AI coding assistant. It has been tested but not independently reviewed, and may contain bugs or security issues. Proceed with caution and use it at your own risk.'),
+        });
+        aiRow.add_prefix(new Gtk.Image({icon_name: 'dialog-warning-symbolic', valign: Gtk.Align.CENTER}));
+        disclosure.add(aiRow);
+        const recoveryRow = new Adw.ActionRow({
+            title: _('If your desktop stops responding'),
+            subtitle: _('Switch to a text console (Ctrl+Alt+F3), log in and run: gsettings set org.gnome.shell disable-user-extensions true — then restart your session.'),
+            subtitle_selectable: true,
+        });
+        recoveryRow.add_prefix(new Gtk.Image({icon_name: 'utilities-terminal-symbolic', valign: Gtk.Align.CENTER}));
+        disclosure.add(recoveryRow);
+        page.add(disclosure);
+
         return page;
     }
 }
