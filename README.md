@@ -20,10 +20,14 @@ A floating dock for GNOME Shell 46–50. Pier keeps your favourite apps one clic
 - Windows minimize into their app's dock icon and restore out of it
 - Pinned apps (shared with GNOME's favourites), a separator, then other running apps
 - Bottom, left or right edge
-- Autohide modes: *never*, *always*, or *intellihide* (hide only when a window overlaps). Push the pointer against the screen edge to reveal a hidden dock
+- Autohide modes:
+  - *Never hide*: the dock reserves its strip of the screen, so maximized windows stop above it
+  - *Always hide*: hidden until you push the pointer against the screen edge
+  - *Hide when a window overlaps* (intellihide): hidden only while a window, maximized or not, covers the dock. Push against the screen edge to reveal it
+- Fits into the overview: the dock stays put, the frosted glass fades out as the overview opens, and for a dock at the bottom the desktop card and app grid keep clear of it. With *Never hide*, the strip beside a bottom dock shrinks along with the rest of the desktop
 - libadwaita preferences window; changes apply live
 
-GNOME's built-in dash is hidden while the extension is enabled and restored when it is disabled.
+GNOME's built-in dash is hidden while the extension is enabled and restored when it is disabled. Pier takes its place in the overview.
 
 ## Using the dock
 
@@ -103,8 +107,9 @@ prefs.js                      preferences window
 stylesheet.css                dock look
 schemas/                      GSettings schema
 src/dockManager.js            dock lifetime, rebuilds on monitor/setting changes, hides the stock dash
-src/dock.js                   dock actor: background, item box, geometry, reveal/hide, tooltip,
-                              drop target, slide animation when items reorder
+                              (sized to the dock, so the overview keeps clear of it)
+src/dock.js                   dock actor: background, item box, geometry, reserved strip (strut),
+                              reveal/hide, tooltip, drop target, slide animation when items reorder
 src/dockItem.js               AppDockItem, ShowAppsItem, DockSeparator, DockPlaceholder
 src/appModel.js               pinned + running apps; pin, unpin and reorder favourites
 src/roundedBlur.js            frosted-glass background: blurred wallpaper copy with rounded corners
@@ -146,7 +151,7 @@ Useful dock API:
 
 - State: `dock.items`, `dock.edge`, `dock.metrics`, `dock.model`, `dock.hover`, `dock.menuOpen`, `dock.dragging`, `dock.revealed`
 - Geometry: `dock.getItemForApp(app)`, `dock.getBaseCenters()`, `dock.getRevealedRect()`, `dock.pinnedStartIndex`
-- Actions: `dock.setRevealed()`, `dock.setDragging()`, `dock.moveItem()`, `dock.restoreOrder()`, `dock.insertPlaceholder()`, `dock.removePlaceholder()`
+- Actions: `dock.setRevealed()`, `dock.setStrutsEnabled()`, `dock.setDragging()`, `dock.moveItem()`, `dock.restoreOrder()`, `dock.insertPlaceholder()`, `dock.removePlaceholder()`
 - Signals: `hover-changed`, `menu-state-changed`, `drag-state-changed`, `item-launching`, `item-drag-begin`, `item-drag-cancelled`, `item-drag-end`
 
 `disable()` must undo everything `enable()` did: signals, timeouts and actors. extensions.gnome.org review requires it.
@@ -155,6 +160,8 @@ Useful dock API:
 
 - Primary monitor only.
 - The frosted-glass background blurs the wallpaper only, not windows behind the dock. GNOME 50's live background blur can only blur rectangles, so it can't follow the dock's rounded corners. Windows rarely sit behind the dock anyway: they're kept clear of it when autohide is off, and intellihide hides the dock when a window overlaps it.
+- The strip beside the dock only shrinks with the desktop in the overview for a dock at the bottom. With a side dock and *Never hide*, the strip it reserves switches between wallpaper and the overview's backdrop as the overview opens and closes, as it does for GNOME's own panels.
+- The overview polish (the frosted glass fading and the strip following the desktop) relies on internal parts of GNOME Shell's overview. If a future GNOME version changes them, Pier falls back to a plain fade or leaves the strip to GNOME.
 - Apps can be dragged in only from the overview. GNOME leaves pinned apps out of the app grid, so the grid only offers apps that aren't pinned yet.
 - Most recently tested on GNOME 50 (Ubuntu 26.04). Drag and drop uses GNOME's standard drag-and-drop API, which GNOME 46–49 also have, but it hasn't been tested there.
 
