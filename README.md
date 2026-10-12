@@ -17,6 +17,7 @@ A floating dock for GNOME Shell 46–50. Pier keeps your favourite apps one clic
 - Hover magnification with a cosine falloff; neighbouring icons grow too and are pushed apart
 - Icons bounce while an app launches
 - A dot under each running app
+- Windows minimize into their app's dock icon and restore out of it
 - Pinned apps (shared with GNOME's favourites), a separator, then other running apps
 - Bottom, left or right edge
 - Autohide modes: *never*, *always*, or *intellihide* (hide only when a window overlaps). Push the pointer against the screen edge to reveal a hidden dock

@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import Clutter from 'gi://Clutter';
+import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
+import Meta from 'gi://Meta';
+import Mtk from 'gi://Mtk';
 import Shell from 'gi://Shell';
 import St from 'gi://St';
 
@@ -189,8 +192,20 @@ class AppDockItem extends DockIcon {
         this.app = app;
         this.pinned = pinned;
 
-        this.app.connectObject('notify::state', () => this.syncDot(), this);
+        this._iconGeometryLater = 0;
+
+        this.app.connectObject(
+            'notify::state', () => this.syncDot(),
+            'windows-changed', () => this._queueIconGeometry(),
+            this);
         this.connect('clicked', (actor, button) => this._onClicked(button));
+        this.connect('notify::allocation', () => this._queueIconGeometry());
+        this.connect('destroy', () => {
+            if (this._iconGeometryLater)
+                global.compositor.get_laters().remove(this._iconGeometryLater);
+            // Hand the app's windows back to GNOME's default (minimize to the top-left).
+            this._setIconGeometry(null);
+        });
 
         // Pinned apps can be dragged to reorder or remove them (features/dragReorder.js).
         if (pinned) {
@@ -208,6 +223,39 @@ class AppDockItem extends DockIcon {
 
     get tooltipText() {
         return this.app.get_name();
+    }
+
+    /**
+     * Tell the window manager where this app sits on screen, for every one of
+     * its windows. GNOME minimizes windows into (and unminimizes them out of)
+     * this rectangle; without it they fly to the monitor's top-left corner.
+     */
+    updateIconGeometry() {
+        if (!this.icon.mapped)
+            return;
+        const [x, y] = this.icon.get_transformed_position();
+        const [width, height] = this.icon.get_transformed_size();
+        this._setIconGeometry(new Mtk.Rectangle({
+            x: Math.round(x),
+            y: Math.round(y),
+            width: Math.round(width),
+            height: Math.round(height),
+        }));
+    }
+
+    _setIconGeometry(rect) {
+        for (const win of this.app.get_windows())
+            win.set_icon_geometry(rect);
+    }
+
+    _queueIconGeometry() {
+        if (this._iconGeometryLater)
+            return;
+        this._iconGeometryLater = global.compositor.get_laters().add(Meta.LaterType.BEFORE_REDRAW, () => {
+            this._iconGeometryLater = 0;
+            this.updateIconGeometry();
+            return GLib.SOURCE_REMOVE;
+        });
     }
 
     /** A free-standing copy of the icon at its current on-screen size. */
@@ -250,6 +298,9 @@ class AppDockItem extends DockIcon {
 
     _activate() {
         const windows = this._windows();
+        // The dock may have moved (revealed, magnified) since it was last
+        // recorded; make sure minimize/unminimize animate to where it is now.
+        this.updateIconGeometry();
 
         if (windows.length === 0) {
             this.app.activate();
@@ -283,7 +334,10 @@ class AppDockItem extends DockIcon {
         const windows = this._windows();
         for (const win of windows) {
             menu.addAction(win.get_title() || this.app.get_name(),
-                () => Main.activateWindow(win));
+                () => {
+                    this.updateIconGeometry();
+                    Main.activateWindow(win);
+                });
         }
         if (windows.length > 0)
             menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
