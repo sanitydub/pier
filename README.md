@@ -2,6 +2,15 @@
 
 A floating dock for GNOME Shell 46–50. Pier keeps your favourite apps one click away, with icons that grow under the pointer, drag-and-drop pinning and reordering, launch animations, running indicators and an autohide that steps out of the way of your windows.
 
+> [!WARNING]
+> **AI disclosure: this extension's code is 100% AI-generated.**
+>
+> Every line of Pier was written by an AI coding assistant. The code was tested, but it has not been independently reviewed or audited line by line, and it may contain bugs, security issues or behaviour nobody intended.
+>
+> GNOME Shell extensions run inside your desktop session with the same access as the rest of GNOME Shell, so a fault can freeze or crash your desktop. **Proceed with caution and use it at your own risk.** Read the code before installing it, and know how to turn it off: `gnome-extensions disable pier@sanitydub.github.io`, or if your desktop stops responding, switch to a text console (for example `Ctrl+Alt+F3`), log in, run `gsettings set org.gnome.shell disable-user-extensions true` and restart your session.
+>
+> Pier is provided as is, without any warranty.
+
 ## Features
 
 - Floating, rounded, translucent dock with adjustable opacity and optional background blur
