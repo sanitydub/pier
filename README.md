@@ -13,7 +13,7 @@ A floating dock for GNOME Shell 46–50. Pier keeps your favourite apps one clic
 
 ## Features
 
-- Floating, rounded, translucent dock with adjustable opacity and optional background blur
+- Floating, rounded, translucent dock with adjustable opacity and an optional frosted-glass background (blurred wallpaper, shaped to the dock's rounded corners)
 - Hover magnification with a cosine falloff; neighbouring icons grow too and are pushed apart
 - Icons bounce while an app launches
 - A dot under each running app
@@ -107,6 +107,7 @@ src/dock.js                   dock actor: background, item box, geometry, reveal
                               drop target, slide animation when items reorder
 src/dockItem.js               AppDockItem, ShowAppsItem, DockSeparator, DockPlaceholder
 src/appModel.js               pinned + running apps; pin, unpin and reorder favourites
+src/roundedBlur.js            frosted-glass background: blurred wallpaper copy with rounded corners
 src/features/                 pluggable behaviours
     magnification.js          hover magnification
     launchBounce.js           bounce while an app launches
@@ -151,7 +152,7 @@ Useful dock API:
 ## Known limitations
 
 - Primary monitor only.
-- Background blur is rectangular and does not follow the rounded corners.
+- The frosted-glass background blurs the wallpaper only, not windows behind the dock. GNOME 50's live background blur can only blur rectangles, so it can't follow the dock's rounded corners. Windows rarely sit behind the dock anyway: they're kept clear of it when autohide is off, and intellihide hides the dock when a window overlaps it.
 - Apps can be dragged in only from the overview. GNOME leaves pinned apps out of the app grid, so the grid only offers apps that aren't pinned yet.
 - Most recently tested on GNOME 50 (Ubuntu 26.04). Drag and drop uses GNOME's standard drag-and-drop API, which GNOME 46–49 also have, but it hasn't been tested there.
 

@@ -26,8 +26,8 @@
     </key>
     <key name="blur-background" type="b">
       <default>false</default>
-      <summary>Blur what is behind the dock</summary>
-      <description>Frosted-glass effect. Blur is rectangular and does not follow the rounded corners.</description>
+      <summary>Frosted-glass dock background</summary>
+      <description>Show a blurred copy of the wallpaper behind the dock, cut to the dock's rounded shape. Windows behind the dock are not blurred.</description>
     </key>
     <key name="show-running-dots" type="b">
       <default>true</default>

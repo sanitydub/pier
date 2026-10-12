@@ -98,7 +98,7 @@ export default class PierPreferences extends ExtensionPreferences {
         const style = new Adw.PreferencesGroup({title: _('Style')});
         style.add(scaleRow(settings, 'bg-opacity', _('Background opacity'), 0, 1, 0.05));
         style.add(switchRow(settings, 'blur-background', _('Blur background'),
-            _('Frosted-glass effect. The blur is rectangular and ignores rounded corners.')));
+            _('Frosted-glass effect: a blurred view of your wallpaper, shaped to the dock')));
         style.add(switchRow(settings, 'show-running-dots', _('Show running indicators')));
         page.add(style);
 

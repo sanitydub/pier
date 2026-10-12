@@ -4,7 +4,6 @@ import Clutter from 'gi://Clutter';
 import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
 import Meta from 'gi://Meta';
-import Shell from 'gi://Shell';
 import St from 'gi://St';
 
 import * as Config from 'resource:///org/gnome/shell/misc/config.js';
@@ -13,6 +12,7 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
 import {AppDockItem, DockPlaceholder, DockSeparator, ShowAppsItem} from './dockItem.js';
+import {RoundedBlur} from './roundedBlur.js';
 import * as Geo from './util/geometry.js';
 
 const REVEAL_DURATION = 220;
@@ -101,7 +101,7 @@ export const Dock = GObject.registerClass({
         this._items = new Map();
         this._baseContentAlong = 0;
         this._totalCross = 0;
-        this._blur = null;
+        this._blurBg = null; // RoundedBlur behind the background, when blur is on
         this._tooltipItem = null;
         this._tooltipLater = 0;
         this._plannedAlong = null; // item -> along position after a pending relayout
@@ -135,6 +135,10 @@ export const Dock = GObject.registerClass({
             this.emit('hover-changed');
         });
         this.connect('destroy', this._onDestroy.bind(this));
+        // The blurred wallpaper copy must stay aligned with the real wallpaper
+        // when the dock moves (geometry updates, autohide slide).
+        for (const signal of ['notify::allocation', 'notify::translation-x', 'notify::translation-y'])
+            this.connect(signal, () => this._blurBg?.syncPosition());
         this.model.connectObject('changed', () => this._syncItems(), this);
 
         this._syncItems();
@@ -287,6 +291,7 @@ export const Dock = GObject.registerClass({
             `background-color: rgba(28, 28, 30, ${opacity.toFixed(2)}); border-radius: ${radius}px;`);
 
         this._syncBlur();
+        this._blurBg?.setCornerRadius(radius * this.metrics.sf);
 
         for (const item of this.items)
             item.syncDot();
@@ -473,8 +478,16 @@ export const Dock = GObject.registerClass({
         const a1 = Math.round((alongSize - boxAlong) / 2);
         const bgCross = m.topPad + m.base + m.edgePad;
 
-        this._background.allocate(Geo.boxFromAxes(this.edge, width, height,
-            a1 - m.bgPad, a1 + boxAlong + m.bgPad, m.gap, m.gap + bgCross));
+        const bgBox = Geo.boxFromAxes(this.edge, width, height,
+            a1 - m.bgPad, a1 + boxAlong + m.bgPad, m.gap, m.gap + bgCross);
+        this._background.allocate(bgBox);
+        if (this._blurBg) {
+            const inset = this._blurBg.inset;
+            const blurBox = bgBox.copy();
+            blurBox.set_origin(bgBox.x1 - inset, bgBox.y1 - inset);
+            blurBox.set_size(bgBox.get_width() + 2 * inset, bgBox.get_height() + 2 * inset);
+            this._blurBg.allocate(blurBox);
+        }
         this._box.allocate(Geo.boxFromAxes(this.edge, width, height,
             a1, a1 + boxAlong, m.gap, m.gap + boxCross));
     }
@@ -483,17 +496,12 @@ export const Dock = GObject.registerClass({
 
     _syncBlur() {
         const wanted = this._settings.get_boolean('blur-background');
-        if (wanted && !this._blur) {
-            this._blur = new Shell.BlurEffect({mode: Shell.BlurMode.BACKGROUND, brightness: 0.9});
-            // GNOME 46 renamed 'sigma' to 'radius'.
-            if ('radius' in this._blur)
-                this._blur.radius = 40;
-            else
-                this._blur.sigma = 20;
-            this._background.add_effect_with_name('pier-blur', this._blur);
-        } else if (!wanted && this._blur) {
-            this._background.remove_effect(this._blur);
-            this._blur = null;
+        if (wanted && !this._blurBg) {
+            this._blurBg = new RoundedBlur(this.monitorIndex);
+            this.insert_child_below(this._blurBg, this._background);
+        } else if (!wanted && this._blurBg) {
+            this._blurBg.destroy();
+            this._blurBg = null;
         }
     }
 
