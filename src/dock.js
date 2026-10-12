@@ -12,6 +12,7 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
 import {AppDockItem, DockPlaceholder, DockSeparator, ShowAppsItem} from './dockItem.js';
+import {OverviewStrip} from './overviewStrip.js';
 import {RoundedBlur} from './roundedBlur.js';
 import * as Geo from './util/geometry.js';
 
@@ -124,9 +125,16 @@ export const Dock = GObject.registerClass({
         this._tooltip = new St.Label({style_class: 'pier-tooltip', visible: false});
         Main.layoutManager.addTopChrome(this._tooltip, {...NO_INPUT_REGION});
 
+        // Carries the strip our strut reserves along with the desktop as the
+        // overview opens and closes (see overviewStrip.js).
+        this._overviewStrip = new OverviewStrip(monitorIndex);
+        Main.layoutManager.addChrome(this._overviewStrip, {...NO_INPUT_REGION});
+        Main.layoutManager.uiGroup.set_child_below_sibling(this._overviewStrip, this);
+
         // On shell shutdown the layout manager destroys these before the dock,
         // so drop our references rather than touching disposed actors later.
         this._strut.connect('destroy', () => (this._strut = null));
+        this._overviewStrip.connect('destroy', () => (this._overviewStrip = null));
         this._tooltip.connect('destroy', () => (this._tooltip = null));
 
         this.connect('notify::hover', () => {
@@ -265,6 +273,12 @@ export const Dock = GObject.registerClass({
     setStrutsEnabled(enabled) {
         if (this._strut)
             this._strut.visible = enabled;
+        this._syncOverviewStrip();
+    }
+
+    _syncOverviewStrip() {
+        const reserving = this.edge === Geo.Position.BOTTOM && Boolean(this._strut?.visible);
+        this._overviewStrip?.setInset(reserving ? Math.round(this._strut.height) : 0);
     }
 
     setDragging(dragging) {
@@ -411,6 +425,7 @@ export const Dock = GObject.registerClass({
             this._strut.set_position(mon.x, mon.y + mon.height - strutCross);
             this._strut.set_size(mon.width, strutCross);
         }
+        this._syncOverviewStrip();
     }
 
     /**
@@ -559,6 +574,7 @@ export const Dock = GObject.registerClass({
             this._tooltipLater = 0;
         }
         this._tooltip?.destroy();
+        this._overviewStrip?.destroy();
         this._strut?.destroy();
         this._items.clear();
     }

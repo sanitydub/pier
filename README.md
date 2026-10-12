@@ -108,6 +108,8 @@ src/dock.js                   dock actor: background, item box, geometry, reveal
 src/dockItem.js               AppDockItem, ShowAppsItem, DockSeparator, DockPlaceholder
 src/appModel.js               pinned + running apps; pin, unpin and reorder favourites
 src/roundedBlur.js            frosted-glass background: blurred wallpaper copy with rounded corners
+src/wallpaper.js              wallpaper copy aligned to the screen; overview progress tracking
+src/overviewStrip.js          carries the strip a bottom dock reserves along with the desktop in the overview
 src/features/                 pluggable behaviours
     magnification.js          hover magnification
     launchBounce.js           bounce while an app launches
