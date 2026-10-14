@@ -127,7 +127,9 @@ The test loads a small helper extension from [`tests/helper/`](tests/helper/) th
 To run the same test on another distribution, use a container (needs [Podman](https://podman.io)):
 
 ```bash
-make test-container DISTRO=fedora-44
+make test-container DISTRO=fedora-44      # GNOME 50
+make test-container DISTRO=ubuntu-24.04   # GNOME 46
+make test-container DISTRO=debian-13      # GNOME 48
 ```
 
 [`tests/container.sh`](tests/container.sh) builds the image in `tests/containers/<distro>/` (the distribution's GNOME Shell packages, plus the extensions it enables by default, which the test turns on alongside Pier) and runs `make test` inside it on a copy of the code. The first run downloads the distribution's packages, about 1–2 GB. Containers have no system D-Bus, so `tests/smoke.sh` starts a stand-in one and ignores warnings about the system services it lacks, such as logind.
@@ -228,7 +230,7 @@ Useful dock API:
 - The strip beside the dock only shrinks with the desktop in the overview for a dock at the bottom. With a side dock and *Never hide*, the strip it reserves switches between wallpaper and the overview's backdrop as the overview opens and closes, as it does for GNOME's own panels.
 - The overview polish (the frosted glass fading and the strip following the desktop) relies on internal parts of GNOME Shell's overview. If a future GNOME version changes them, Pier falls back to a plain fade or leaves the strip to GNOME.
 - Apps can be dragged in only from the overview. GNOME leaves pinned apps out of the app grid, so the grid only offers apps that aren't pinned yet.
-- Tested on Ubuntu 26.04 (GNOME 50.1), by hand and with `make test`, and on Fedora 44 (GNOME 50.5) with `make test-container DISTRO=fedora-44`, including Fedora Workstation's Background Logo extension, plus the README's install steps. Drag and drop uses GNOME's standard drag-and-drop API, which GNOME 46–49 also have, but it hasn't been tested there.
+- Tested with `make test` on Ubuntu 26.04 (GNOME 50.1, also by hand), and with `make test-container` on Fedora 44 (GNOME 50.5, with Fedora's Background Logo extension), Ubuntu 24.04 LTS (GNOME 46.0, with Ubuntu's Tiling Assistant and AppIndicator extensions) and Debian 13 (GNOME 48.7). The README's install steps were also checked on Fedora 44. The smoke test doesn't cover drag and drop, which has only been tested on GNOME 50, and GNOME 47 and 49 are claimed but haven't been tested.
 - GNOME 51 isn't listed as supported yet. The code has been ported for its API changes (see *Preparing for a new GNOME release*), but it hasn't been tested on GNOME 51.
 
 ## License

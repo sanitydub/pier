@@ -1,0 +1,12 @@
+# Debian 13 "trixie" (GNOME Shell 48) with what tests/smoke.sh needs.
+# Debian enables no extensions by default.
+FROM docker.io/library/debian:13
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        gnome-shell gnome-shell-common mutter-common \
+        dbus dbus-daemon dbus-user-session libglib2.0-bin \
+        libgl1-mesa-dri libegl1 libgbm1 \
+        adwaita-icon-theme gnome-backgrounds \
+        python3 make git zip unzip coreutils procps findutils ca-certificates \
+    && rm -rf /var/lib/apt/lists/*

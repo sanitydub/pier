@@ -66,6 +66,18 @@ done
 sleep 3
 
 call() { gdbus call "${BUS[@]}" --method "org.gnome.Shell.Extensions.$1" "${@:2}"; }
+# Enabling or disabling rewrites the enabled-extensions setting. Back-to-back
+# calls race, and GNOME Shell then briefly drops and restarts the others,
+# which some extensions don't survive cleanly. So wait for each one to settle.
+set_enabled() { # Enable|Disable, uuid
+    call "$1Extension" "$2" >/dev/null
+    local want=1; [ "$1" = Disable ] && want=2
+    for _ in $(seq 1 20); do
+        call GetExtensionInfo "$2" | grep -q "'state': <$want" && break
+        sleep 0.2
+    done
+    sleep 1
+}
 # Evaluate JS in the shell; prints the returned string.
 ev() {
     gdbus call "${BUS[@]}" --method org.gnome.Shell.Eval "$1" | python3 -c '
@@ -90,12 +102,12 @@ check() { # name, JS that evaluates to the string "ok" or a failure message
     fi
 }
 
-call EnableExtension "$HELPER" >/dev/null
+set_enabled Enable "$HELPER"
 for extra in ${PIER_TEST_EXTRA_EXTENSIONS:-}; do
-    call EnableExtension "$extra" >/dev/null
+    set_enabled Enable "$extra"
 done
-call EnableExtension "$UUID" >/dev/null
-sleep 2
+set_enabled Enable "$UUID"
+sleep 1
 
 distro=$( (. /etc/os-release 2>/dev/null && echo "$PRETTY_NAME") || echo "unknown system")
 echo "GNOME Shell $(gnome-shell --version | grep -oE '[0-9.]+$') on $distro, testing $UUID"
@@ -152,9 +164,9 @@ check "app grid open" 'expect(dock()?.mapped, "dock not visible")'
 ev 'Main.overview.hide(); "ok"' >/dev/null; sleep 2
 check "overview closed" 'expect(!Main.overview.visible && dock()?.mapped, "overview still visible")'
 
-call DisableExtension "$UUID" >/dev/null; sleep 1
+set_enabled Disable "$UUID"
 check "disable removes the dock and restores the dash" 'expect(!dock() && Main.overview.dash.height !== 0, "dock left behind or dash still hidden")'
-call EnableExtension "$UUID" >/dev/null; sleep 2
+set_enabled Enable "$UUID"
 check "re-enable" 'expect(pier()?.state === 1 && dock()?.mapped, `state ${pier()?.state}`)'
 
 errors=$(call GetExtensionErrors "$UUID")

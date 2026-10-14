@@ -1,0 +1,17 @@
+# Ubuntu 24.04 LTS (GNOME Shell 46) with what tests/smoke.sh needs.
+# Includes extensions Ubuntu enables by default (Tiling Assistant and
+# AppIndicator), so the test can run with them enabled. Ubuntu Dock is left
+# out: the README asks users to turn it off while using Pier.
+FROM docker.io/library/ubuntu:24.04
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        gnome-shell gnome-shell-common mutter-common \
+        gnome-shell-extension-ubuntu-tiling-assistant gnome-shell-extension-appindicator \
+        dbus dbus-daemon dbus-user-session libglib2.0-bin \
+        libgl1-mesa-dri libegl1 libgbm1 \
+        adwaita-icon-theme gnome-backgrounds \
+        python3 make git zip unzip coreutils procps findutils ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+# Extensions this distribution enables by default, for the smoke test.
+ENV PIER_TEST_EXTRA_EXTENSIONS="tiling-assistant@ubuntu.com ubuntu-appindicators@ubuntu.com"
