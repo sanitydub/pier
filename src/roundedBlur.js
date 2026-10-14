@@ -91,13 +91,11 @@ class RoundedBlur extends WallpaperCopy {
         // Effects added later are applied first: blur, then cut the corners.
         this._corners = new RoundedCornerEffect();
         this.add_effect(this._corners);
-        const blur = new Shell.BlurEffect({mode: Shell.BlurMode.ACTOR, brightness: BLUR_BRIGHTNESS});
-        // GNOME 46 renamed 'sigma' to 'radius'.
-        if ('radius' in blur)
-            blur.radius = BLUR_RADIUS;
-        else
-            blur.sigma = BLUR_RADIUS / 2;
-        this.add_effect(blur);
+        this.add_effect(new Shell.BlurEffect({
+            mode: Shell.BlurMode.ACTOR,
+            radius: BLUR_RADIUS,
+            brightness: BLUR_BRIGHTNESS,
+        }));
 
         this.connect('notify::allocation', () => this._syncShape());
 

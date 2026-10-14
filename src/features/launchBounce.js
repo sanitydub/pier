@@ -48,20 +48,18 @@ export class LaunchBounce {
         if (!St.Settings.get().enable_animations)
             return;
 
-        const app = item.app ?? null;
+        const app = item.app;
         const state = {stop: false, timeoutId: 0, app, windowsId: 0};
         state.timeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, MAX_BOUNCE_TIME, () => {
             state.timeoutId = 0;
             state.stop = true;
             return GLib.SOURCE_REMOVE;
         });
-        if (app) {
-            const initialWindows = app.get_n_windows();
-            state.windowsId = app.connect('windows-changed', () => {
-                if (app.get_n_windows() > initialWindows)
-                    state.stop = true;
-            });
-        }
+        const initialWindows = app.get_n_windows();
+        state.windowsId = app.connect('windows-changed', () => {
+            if (app.get_n_windows() > initialWindows)
+                state.stop = true;
+        });
 
         this._active.set(item, state);
         item.connectObject('destroy', () => this._finish(item, true), this);
@@ -108,8 +106,7 @@ export class LaunchBounce {
 
         if (state.timeoutId)
             GLib.source_remove(state.timeoutId);
-        if (state.windowsId)
-            state.app.disconnect(state.windowsId);
+        state.app.disconnect(state.windowsId);
         item.disconnectObject(this);
         if (destroying)
             return;

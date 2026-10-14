@@ -34,9 +34,8 @@ const PIN_TIMEOUT = 1000;
  *   pinned is moved instead.
  */
 export class DragReorder {
-    constructor(dock, settings) {
+    constructor(dock) {
         this._dock = dock;
-        this._settings = settings;
         this._drag = null; // one of our pinned items being dragged
         this._ext = null; // an app being dragged in from the overview
         this._pending = null; // a dropped-in app waiting for the favourites to update
@@ -295,7 +294,7 @@ export class DragReorder {
             if (drag.outside)
                 return false;
             const pos = this._pinnedIndex(source);
-            const current = this._dock.model.getApps().pinned.indexOf(source.app);
+            const current = this._dock.model.pinnedIndex(source.app);
             this._land(source, dragActor);
             if (pos !== current)
                 this._dock.model.moveTo(source.app, pos);
@@ -318,7 +317,7 @@ export class DragReorder {
                 };
                 this._dock.model.pinAt(ext.app, pos);
             } else {
-                const current = this._dock.model.getApps().pinned.indexOf(ext.app);
+                const current = this._dock.model.pinnedIndex(ext.app);
                 ext.slot.fadeIn();
                 if (pos !== current)
                     this._dock.model.moveTo(ext.app, pos);
@@ -352,29 +351,11 @@ export class DragReorder {
         if (!drag?.label || !drag.dragActor)
             return;
 
-        const [ax, ay] = drag.dragActor.get_transformed_position();
-        const [aw, ah] = drag.dragActor.get_transformed_size();
         const [, lw] = drag.label.get_preferred_width(-1);
         const [, lh] = drag.label.get_preferred_height(lw);
-        const gap = LABEL_GAP * this._dock.metrics.sf;
-
-        // Beside the icon, on the side facing away from the dock's screen edge.
-        let x, y;
-        switch (this._dock.edge) {
-        case Geo.Position.LEFT:
-            [x, y] = [ax + aw + gap, ay + (ah - lh) / 2];
-            break;
-        case Geo.Position.RIGHT:
-            [x, y] = [ax - lw - gap, ay + (ah - lh) / 2];
-            break;
-        default:
-            [x, y] = [ax + (aw - lw) / 2, ay - lh - gap];
-        }
-
-        const mon = this._dock.monitor;
-        x = Math.max(mon.x, Math.min(x, mon.x + mon.width - lw));
-        y = Math.max(mon.y, Math.min(y, mon.y + mon.height - lh));
-        drag.label.set_position(Math.round(x), Math.round(y));
+        drag.label.set_position(...Geo.placeBeside(this._dock.edge,
+            [...drag.dragActor.get_transformed_position(), ...drag.dragActor.get_transformed_size()],
+            lw, lh, LABEL_GAP * this._dock.metrics.sf, this._dock.monitor));
     }
 
     _cancelRemoveTimer() {

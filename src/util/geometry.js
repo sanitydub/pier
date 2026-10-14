@@ -41,6 +41,28 @@ export function awayFromEdgeSign(position) {
     return position === Position.LEFT ? 1 : -1;
 }
 
+/**
+ * Top-left corner for a (width x height) label beside the rect
+ * [x, y, w, h], on the side facing away from the screen edge, @gap away
+ * (@bottomGap for a bottom dock), kept inside @monitor.
+ */
+export function placeBeside(position, [x, y, w, h], width, height, gap, monitor, bottomGap = gap) {
+    let lx, ly;
+    switch (position) {
+    case Position.LEFT:
+        [lx, ly] = [x + w + gap, y + (h - height) / 2];
+        break;
+    case Position.RIGHT:
+        [lx, ly] = [x - width - gap, y + (h - height) / 2];
+        break;
+    default:
+        [lx, ly] = [x + (w - width) / 2, y - height - bottomGap];
+    }
+    lx = Math.max(monitor.x, Math.min(lx, monitor.x + monitor.width - width));
+    ly = Math.max(monitor.y, Math.min(ly, monitor.y + monitor.height - height));
+    return [Math.round(lx), Math.round(ly)];
+}
+
 export function rectsOverlap(a, b) {
     return a.x < b.x + b.width && b.x < a.x + a.width &&
         a.y < b.y + b.height && b.y < a.y + a.height;

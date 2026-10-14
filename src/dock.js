@@ -555,28 +555,12 @@ export const Dock = GObject.registerClass({
         if (!item)
             return;
 
-        const [ix, iy] = item.get_transformed_position();
-        const [iw, ih] = item.get_transformed_size();
         const [, lw] = this._tooltip.get_preferred_width(-1);
         const [, lh] = this._tooltip.get_preferred_height(lw);
-        const gap = TOOLTIP_GAP * this.metrics.sf;
-        const mon = this.monitor;
-
-        let x, y;
-        switch (this.edge) {
-        case Geo.Position.LEFT:
-            [x, y] = [ix + iw + gap, iy + (ih - lh) / 2];
-            break;
-        case Geo.Position.RIGHT:
-            [x, y] = [ix - lw - gap, iy + (ih - lh) / 2];
-            break;
-        default:
-            [x, y] = [ix + (iw - lw) / 2, iy - lh];
-        }
-
-        x = Math.max(mon.x, Math.min(x, mon.x + mon.width - lw));
-        y = Math.max(mon.y, Math.min(y, mon.y + mon.height - lh));
-        this._tooltip.set_position(Math.round(x), Math.round(y));
+        // Above a bottom dock the item's own padding already gives a gap.
+        this._tooltip.set_position(...Geo.placeBeside(this.edge,
+            [...item.get_transformed_position(), ...item.get_transformed_size()],
+            lw, lh, TOOLTIP_GAP * this.metrics.sf, this.monitor, 0));
     }
 
     _onDestroy() {

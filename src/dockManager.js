@@ -10,7 +10,8 @@ import {Dock} from './dock.js';
 import {FEATURES} from './features/index.js';
 
 // Settings that change the dock's structure: the dock and its features are rebuilt.
-// Every other key is either applied live by Dock.syncStyle() or watched by a feature.
+// STYLE_KEYS are applied live by Dock.syncStyle(); features watch the rest.
+const STYLE_KEYS = new Set(['bg-opacity', 'blur-background', 'show-running-dots']);
 const REBUILD_KEYS = new Set([
     'icon-size',
     'position',
@@ -107,7 +108,7 @@ export class DockManager {
     _onSettingChanged(key) {
         if (REBUILD_KEYS.has(key))
             this._queueRebuild();
-        else
+        else if (STYLE_KEYS.has(key))
             this._dock?.syncStyle();
     }
 

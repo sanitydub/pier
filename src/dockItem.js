@@ -25,6 +25,7 @@ const ICON_PIVOTS = {
 };
 
 const FADE_IN_DURATION = 180;
+const PLACEHOLDER_DURATION = 180;
 
 // GNOME 51 renamed ONE/TWO/THREE; the old names are deprecated.
 const BUTTONS = St.ButtonMask.PRIMARY !== undefined
@@ -38,7 +39,6 @@ function openMenu(menu) {
     else
         menu.open(BoxPointer.PopupAnimation.FULL);
 }
-const PLACEHOLDER_DURATION = 180;
 
 const MENU_SIDES = {
     [Geo.Position.BOTTOM]: St.Side.BOTTOM,
@@ -245,7 +245,9 @@ class AppDockItem extends DockIcon {
      * this rectangle; without it they fly to the monitor's top-left corner.
      */
     updateIconGeometry() {
-        if (!this.icon.mapped)
+        // Runs on every allocation change (e.g. each magnification frame),
+        // so skip the work when there's no window to tell.
+        if (!this.icon.mapped || this.app.get_n_windows() === 0)
             return;
         const [x, y] = this.icon.get_transformed_position();
         const [width, height] = this.icon.get_transformed_size();

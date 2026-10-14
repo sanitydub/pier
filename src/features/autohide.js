@@ -169,12 +169,7 @@ export class Autohide {
             Shell.ActionMode.NORMAL | Shell.ActionMode.OVERVIEW);
         this._pressure.connectObject('trigger', () => this._onPressure(), this);
 
-        try {
-            this._barrier = new Meta.Barrier({backend: global.backend, ...params});
-        } catch {
-            // Mutter < 46 took a display instead of a backend.
-            this._barrier = new Meta.Barrier({display: global.display, ...params});
-        }
+        this._barrier = new Meta.Barrier({backend: global.backend, ...params});
         this._pressure.addBarrier(this._barrier);
     }
 

@@ -14,9 +14,8 @@ const RAMP_OUT_DURATION = 220;
  * enter and out on leave so icons grow and shrink smoothly.
  */
 export class Magnification {
-    constructor(dock, settings) {
+    constructor(dock) {
         this._dock = dock;
-        this._settings = settings;
         this._strength = 0;
         this._strengthTarget = 0;
         this._pointer = null;

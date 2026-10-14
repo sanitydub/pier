@@ -33,17 +33,24 @@ export class AppModel extends Signals.EventEmitter {
         const running = this._appSystem.get_running()
             .filter(app => !pinnedIds.has(app.get_id()));
 
-        // Keep a stable launch order so icons don't shuffle as focus changes.
-        const runningIds = running.map(app => app.get_id());
-        this._runningOrder = this._runningOrder.filter(id => runningIds.includes(id));
+        // Keep a stable launch order so icons don't shuffle as focus changes:
+        // apps that were already running keep their place, new ones go last.
+        const runningIds = new Set(running.map(app => app.get_id()));
+        const order = this._runningOrder.filter(id => runningIds.has(id));
         for (const id of runningIds) {
-            if (!this._runningOrder.includes(id))
-                this._runningOrder.push(id);
+            if (!order.includes(id))
+                order.push(id);
         }
-        running.sort((a, b) =>
-            this._runningOrder.indexOf(a.get_id()) - this._runningOrder.indexOf(b.get_id()));
+        this._runningOrder = order;
+        const rank = new Map(order.map((id, i) => [id, i]));
+        running.sort((a, b) => rank.get(a.get_id()) - rank.get(b.get_id()));
 
         return {pinned, running};
+    }
+
+    /** @app's index among the pinned apps, or -1. */
+    pinnedIndex(app) {
+        return this._favorites.getFavorites().indexOf(app);
     }
 
     isPinned(app) {
