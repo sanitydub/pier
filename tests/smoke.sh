@@ -7,6 +7,9 @@
 # own D-Bus, in-memory GSettings and a throwaway data directory.
 #
 # Usage: make test   (or tests/smoke.sh)
+#
+# PIER_TEST_EXTRA_EXTENSIONS: space-separated UUIDs of installed extensions to
+# enable alongside Pier, e.g. a distribution's defaults.
 # Needs: gnome-shell (with --headless), dbus-run-session, gdbus, python3.
 
 set -u
@@ -41,10 +44,19 @@ glib-compile-schemas "$ROOT/schemas"
 export GSETTINGS_BACKEND=memory XDG_DATA_HOME="$WORK/data" XDG_RUNTIME_DIR="$WORK/run"
 unset WAYLAND_DISPLAY DISPLAY
 
+# GNOME Shell won't start without a system bus. Containers usually have none,
+# so stand one in: an empty bus, without logind and the like.
+STANDIN_SYSTEM_BUS=0
+if [ -z "${DBUS_SYSTEM_BUS_ADDRESS:-}" ] && [ ! -S /run/dbus/system_bus_socket ]; then
+    SYSTEM_BUS_PID=$(dbus-daemon --session --address="unix:path=$WORK/system_bus" --fork --print-pid=1)
+    export DBUS_SYSTEM_BUS_ADDRESS="unix:path=$WORK/system_bus"
+    STANDIN_SYSTEM_BUS=1
+fi
+
 gnome-shell --headless --wayland --no-x11 --virtual-monitor 1600x1000 \
     --wayland-display=pier-test >"$WORK/shell.log" 2>&1 &
 SHELL_PID=$!
-trap 'kill $SHELL_PID 2>/dev/null; wait $SHELL_PID 2>/dev/null' EXIT
+trap 'kill $SHELL_PID ${SYSTEM_BUS_PID:-} 2>/dev/null; wait $SHELL_PID 2>/dev/null' EXIT
 
 BUS=(--session --dest org.gnome.Shell --object-path /org/gnome/Shell)
 for _ in $(seq 1 30); do
@@ -79,10 +91,16 @@ check() { # name, JS that evaluates to the string "ok" or a failure message
 }
 
 call EnableExtension "$HELPER" >/dev/null
+for extra in ${PIER_TEST_EXTRA_EXTENSIONS:-}; do
+    call EnableExtension "$extra" >/dev/null
+done
 call EnableExtension "$UUID" >/dev/null
 sleep 2
 
-echo "GNOME Shell $(gnome-shell --version | grep -oE '[0-9.]+$'), testing $UUID"
+distro=$( (. /etc/os-release 2>/dev/null && echo "$PRETTY_NAME") || echo "unknown system")
+echo "GNOME Shell $(gnome-shell --version | grep -oE '[0-9.]+$') on $distro, testing $UUID"
+[ $STANDIN_SYSTEM_BUS = 1 ] && echo "  (no system bus here, e.g. a container: using a stand-in one)"
+[ -n "${PIER_TEST_EXTRA_EXTENSIONS:-}" ] && echo "  (also enabled: $PIER_TEST_EXTRA_EXTENSIONS)"
 
 ev 'globalThis.pier = () => Main.extensionManager.lookup("'"$UUID"'");
 globalThis.dock = () => Main.uiGroup.get_children().find(a => a.name === "pier");
@@ -149,9 +167,12 @@ kill $SHELL_PID 2>/dev/null
 wait $SHELL_PID 2>/dev/null
 
 # Errors and critical warnings logged by GNOME Shell, ignoring unrelated
-# services that fail without a display in this headless session.
+# services that fail without a display in this headless session, and, with a
+# stand-in system bus, system services that only exist on a real system.
+ignore='Screencast|xdg-desktop-portal|calendar-server|evolution'
+[ $STANDIN_SYSTEM_BUS = 1 ] && ignore="$ignore|org\.freedesktop\.login1|proxy for user|colord"
 log_problems=$(grep -E 'JS ERROR|JS WARNING|CRITICAL|already disposed' "$WORK/shell.log" |
-    grep -vE 'Screencast|xdg-desktop-portal|calendar-server|evolution' || true)
+    grep -vE "$ignore" || true)
 if [ -n "$log_problems" ]; then
     echo "  FAIL  problems in the shell log:"
     echo "$log_problems" | sed 's/^/        /' | head -20

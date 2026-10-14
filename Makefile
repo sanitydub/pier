@@ -4,7 +4,7 @@ UUID := pier@sanitydub.github.io
 SCHEMA := org.gnome.shell.extensions.pier.gschema.xml
 INSTALL_DIR := $(HOME)/.local/share/gnome-shell/extensions/$(UUID)
 
-.PHONY: all schemas install uninstall enable disable pack nested logs test clean
+.PHONY: all schemas install uninstall enable disable pack nested logs test test-container clean
 
 all: schemas
 
@@ -47,6 +47,11 @@ nested:
 # Run Pier in a private, headless GNOME Shell and check it for errors (tests/smoke.sh).
 test: schemas
 	tests/smoke.sh
+
+# Run the smoke test in a container of another distribution (needs podman),
+# e.g. make test-container DISTRO=fedora-44. See tests/containers/.
+test-container:
+	tests/container.sh $(DISTRO)
 
 logs:
 	journalctl -f -o cat /usr/bin/gnome-shell

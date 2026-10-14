@@ -1,0 +1,14 @@
+# Fedora 44 (GNOME Shell 50) with what tests/smoke.sh needs.
+# Includes Fedora Workstation's default extension (Background Logo), so the
+# test can run with it enabled.
+FROM registry.fedoraproject.org/fedora:44
+RUN dnf -y install --setopt=install_weak_deps=False --setopt=timeout=60 --setopt=minrate=50k \
+        gnome-shell gnome-shell-extension-common mutter \
+        gnome-shell-extension-background-logo \
+        dbus-daemon dbus-tools glib2 \
+        mesa-dri-drivers mesa-libEGL mesa-libgbm \
+        adwaita-icon-theme gnome-backgrounds \
+        python3 make git zip unzip coreutils procps-ng findutils \
+    && dnf clean all
+# Extensions this distribution enables by default, for the smoke test.
+ENV PIER_TEST_EXTRA_EXTENSIONS="background-logo@fedorahosted.org"

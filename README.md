@@ -54,10 +54,11 @@ Only pinned apps can be dragged. Removing an app shows GNOME's usual "unpinned" 
 
 ## Installing from source
 
-You need GNOME Shell 46–50, plus `git` and `make`, which a fresh Ubuntu or Debian desktop may not have:
+You need GNOME Shell 46–50, plus `git` and `make`, which a fresh desktop may not have:
 
 ```bash
-sudo apt install git make
+sudo apt install git make     # Ubuntu, Debian
+sudo dnf install git make     # Fedora
 ```
 
 Then:
@@ -123,6 +124,14 @@ runs [`tests/smoke.sh`](tests/smoke.sh): it starts a private, headless GNOME She
 
 The test loads a small helper extension from [`tests/helper/`](tests/helper/) that turns on GNOME Shell's unsafe mode, so the script can inspect the shell over D-Bus. It's only ever loaded into the throwaway test shell; never install it on a real session.
 
+To run the same test on another distribution, use a container (needs [Podman](https://podman.io)):
+
+```bash
+make test-container DISTRO=fedora-44
+```
+
+[`tests/container.sh`](tests/container.sh) builds the image in `tests/containers/<distro>/` (the distribution's GNOME Shell packages, plus the extensions it enables by default, which the test turns on alongside Pier) and runs `make test` inside it on a copy of the code. The first run downloads the distribution's packages, about 1–2 GB. Containers have no system D-Bus, so `tests/smoke.sh` starts a stand-in one and ignores warnings about the system services it lacks, such as logind.
+
 ### Preparing for a new GNOME release
 
 GNOME ships a new version every March and September, and the porting guide for extensions appears on [gjs.guide](https://gjs.guide/extensions/upgrading/) around the beta. For each release:
@@ -175,6 +184,8 @@ src/util/geometry.js          orientation helpers (bottom/left/right)
 src/util/shell.js             the running GNOME Shell major version
 tests/smoke.sh                headless smoke test (make test)
 tests/helper/                 test-only helper extension used by smoke.sh
+tests/container.sh            runs the smoke test in a container (make test-container)
+tests/containers/             one Containerfile per tested distribution
 ```
 
 ## Adding a feature
@@ -217,7 +228,7 @@ Useful dock API:
 - The strip beside the dock only shrinks with the desktop in the overview for a dock at the bottom. With a side dock and *Never hide*, the strip it reserves switches between wallpaper and the overview's backdrop as the overview opens and closes, as it does for GNOME's own panels.
 - The overview polish (the frosted glass fading and the strip following the desktop) relies on internal parts of GNOME Shell's overview. If a future GNOME version changes them, Pier falls back to a plain fade or leaves the strip to GNOME.
 - Apps can be dragged in only from the overview. GNOME leaves pinned apps out of the app grid, so the grid only offers apps that aren't pinned yet.
-- Most recently tested on GNOME 50 (Ubuntu 26.04). Drag and drop uses GNOME's standard drag-and-drop API, which GNOME 46–49 also have, but it hasn't been tested there.
+- Tested on Ubuntu 26.04 (GNOME 50.1), by hand and with `make test`, and on Fedora 44 (GNOME 50.5) with `make test-container DISTRO=fedora-44`, including Fedora Workstation's Background Logo extension, plus the README's install steps. Drag and drop uses GNOME's standard drag-and-drop API, which GNOME 46–49 also have, but it hasn't been tested there.
 - GNOME 51 isn't listed as supported yet. The code has been ported for its API changes (see *Preparing for a new GNOME release*), but it hasn't been tested on GNOME 51.
 
 ## License
